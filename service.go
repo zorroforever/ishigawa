@@ -1,12 +1,15 @@
 package enroll
 
-import "io/ioutil"
+import (
+	"golang.org/x/net/context"
+	"io/ioutil"
+)
 
 type Service interface {
-	Enroll() (Profile, error)
+	Enroll(ctx context.Context) (Profile, error)
 }
 
-func NewService(pushCertPath string, pushCertPass string, caCertPath string, url string, scepUrl string) (Service, error) {
+func NewService(pushCertPath string, pushCertPass string, caCertPath string, scepURL string, scepChallenge string, url string) (Service, error) {
 	pushTopic, err := GetPushTopicFromPKCS12(pushCertPath, pushCertPass)
 	if err != nil {
 		return nil, err
@@ -30,24 +33,25 @@ func NewService(pushCertPath string, pushCertPass string, caCertPath string, url
 	}
 
 	return &service{
-		Url:         url,
-		SCEPUrl:     scepUrl,
-		SCEPSubject: scepSubject,
-		Topic:       pushTopic,
-		CACert:      caCert,
+		URL:           url,
+		SCEPURL:       scepURL,
+		SCEPSubject:   scepSubject,
+		SCEPChallenge: scepChallenge,
+		Topic:         pushTopic,
+		CACert:        caCert,
 	}, nil
 }
 
 type service struct {
-	Url           string
-	SCEPUrl       string
+	URL           string
+	SCEPURL       string
 	SCEPChallenge string
 	SCEPSubject   [][][]string
 	Topic         string // APNS Topic for MDM notifications
 	CACert        []byte
 }
 
-func (svc service) Enroll() (Profile, error) {
+func (svc service) Enroll(ctx context.Context) (Profile, error) {
 	profile := NewProfile()
 	profile.PayloadIdentifier = "com.github.micromdm.micromdm.mdm"
 	profile.PayloadOrganization = "MicroMDM"
@@ -56,7 +60,7 @@ func (svc service) Enroll() (Profile, error) {
 
 	scepContent := SCEPPayloadContent{
 		Challenge: svc.SCEPChallenge,
-		URL:       svc.SCEPUrl,
+		URL:       svc.SCEPURL,
 		Keysize:   1024,
 		KeyType:   "RSA",
 		KeyUsage:  0,
@@ -78,9 +82,9 @@ func (svc service) Enroll() (Profile, error) {
 	mdmPayloadContent := MDMPayloadContent{
 		Payload:                 *mdmPayload,
 		AccessRights:            8191,
-		CheckInURL:              svc.Url + "/mdm/checkin",
+		CheckInURL:              svc.URL + "/mdm/checkin",
 		CheckOutWhenRemoved:     true,
-		ServerURL:               svc.Url + "/mdm/connect",
+		ServerURL:               svc.URL + "/mdm/connect",
 		IdentityCertificateUUID: scepPayload.PayloadUUID,
 		Topic: svc.Topic,
 	}
@@ -89,6 +93,7 @@ func (svc service) Enroll() (Profile, error) {
 		caPayload := NewPayload("com.apple.ssl.certificate")
 		caPayload.PayloadDisplayName = "Root certificate for MicroMDM"
 		caPayload.PayloadDescription = "Installs the root CA certificate for MicroMDM"
+		caPayload.PayloadIdentifier = "com.github.micromdm.ssl.ca"
 		caPayload.PayloadContent = svc.CACert
 
 		profile.PayloadContent = []interface{}{*scepPayload, mdmPayloadContent, *caPayload}
