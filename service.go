@@ -10,13 +10,9 @@ type Service interface {
 	Enroll(ctx context.Context) (Profile, error)
 }
 
-func NewService(pushCertPath, pushCertPass, caCertPath, scepURL, scepChallenge, url, tlsCertPath, scepSubject string) (Service, error) {
-	pushTopic, err := GetPushTopicFromPKCS12(pushCertPath, pushCertPass)
-	if err != nil {
-		return nil, err
-	}
-
+func NewService(pushTopic, caCertPath, scepURL, scepChallenge, url, tlsCertPath, scepSubject string) (Service, error) {
 	var caCert, tlsCert []byte
+	var err error
 
 	if caCertPath != "" {
 		caCert, err = ioutil.ReadFile(caCertPath)
