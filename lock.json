@@ -1,0 +1,155 @@
+{
+    "memo": "d051154535b215b85193b9d45b252749d3ee8caa79ccd69e88feedc5490e7416",
+    "projects": [
+        {
+            "name": "github.com/RobotsAndPencils/buford",
+            "branch": "master",
+            "revision": "d6d71aff1447ced56016d09a5d74f4ea488a2d75",
+            "packages": [
+                "payload",
+                "push"
+            ]
+        },
+        {
+            "name": "github.com/boltdb/bolt",
+            "version": "v1.3.0",
+            "revision": "583e8937c61f1af6513608ccc75c97b6abdf4ff9",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/go-kit/kit",
+            "version": "v0.3.0",
+            "revision": "f66b0e13579bfc5a48b9e2a94b1209c107ea1f41",
+            "packages": [
+                "endpoint",
+                "log",
+                "transport/http"
+            ]
+        },
+        {
+            "name": "github.com/go-logfmt/logfmt",
+            "version": "v0.3.0",
+            "revision": "390ab7935ee28ec6b286364bba9b4dd6410cb3d5",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/go-stack/stack",
+            "version": "v1.5.2",
+            "revision": "100eb0c0a9c5b306ca2fb4f165df21d80ada4b82",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gogo/protobuf",
+            "version": "v0.3",
+            "revision": "909568be09de550ed094403c2bf8a261b5bb730a",
+            "packages": [
+                "proto"
+            ]
+        },
+        {
+            "name": "github.com/golang/protobuf",
+            "branch": "master",
+            "revision": "8ee79997227bf9b34611aee7946ae64735e6fd93",
+            "packages": [
+                "proto"
+            ]
+        },
+        {
+            "name": "github.com/gorilla/context",
+            "version": "v1.1",
+            "revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gorilla/mux",
+            "version": "v1.3.0",
+            "revision": "392c28fe23e1c45ddba891b0320b3b5df220beea",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/groob/plist",
+            "branch": "master",
+            "revision": "a4f34fbabd9152a2140daa4a93606ee2ce868b98",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/kr/logfmt",
+            "branch": "master",
+            "revision": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/micromdm/mdm",
+            "branch": "master",
+            "revision": "a4bd2f729ac6b8ea2acb8940ab1ca783e173b348",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/micromdm/scep",
+            "branch": "master",
+            "revision": "083238ccae1d8bf63e82cf4f6d1c198feeb5294a",
+            "packages": [
+                "depot/bolt",
+                "server"
+            ]
+        },
+        {
+            "name": "github.com/pkg/errors",
+            "version": "v0.8.0",
+            "revision": "645ef00459ed84a119197bfb8d8205042c6df63d",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/satori/go.uuid",
+            "version": "v1.1.0",
+            "revision": "879c5887cd475cd7864858769793b2ceb0d44feb",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "golang.org/x/crypto",
+            "branch": "master",
+            "revision": "854ae91cdcbf914b499b1d7641d07859f3653481",
+            "packages": [
+                "pkcs12"
+            ]
+        },
+        {
+            "name": "golang.org/x/net",
+            "branch": "master",
+            "revision": "f2499483f923065a842d38eb4c7f1927e6fc6e6d",
+            "packages": [
+                "context",
+                "context/ctxhttp",
+                "http2"
+            ]
+        },
+        {
+            "name": "golang.org/x/sys",
+            "branch": "master",
+            "revision": "d75a52659825e75fff6158388dddc6a5b04f9ba5",
+            "packages": [
+                "unix"
+            ]
+        }
+    ]
+}
