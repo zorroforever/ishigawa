@@ -21,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/crypto/pkcs12"
 
 	"github.com/RobotsAndPencils/buford/push"
@@ -48,10 +49,13 @@ func init() {
 
 func main() {
 	var (
-		flServerURL    = flag.String("server.url", "", "public HTTPS url of your server")
-		flAPNSCertPath = flag.String("apns.certificate", "mdm.p12", "path to APNS certificate")
-		flAPNSKeyPass  = flag.String("apns.password", "secret", "password for your APNS cert file.")
-		flAPNSKeyPath  = flag.String("apns.key", "", "path to key file if using .pem push cert")
+		flServerURL    = flag.String("server-url", "", "public HTTPS url of your server")
+		flAPNSCertPath = flag.String("apns-certificate", "mdm.p12", "path to APNS certificate")
+		flAPNSKeyPass  = flag.String("apns-password", "secret", "password for your APNS cert file.")
+		flAPNSKeyPath  = flag.String("apns-key", "", "path to key file if using .pem push cert")
+		flTLS          = flag.Bool("tls", true, "use https")
+		flTLSCert      = flag.String("tls-cert", "", "path to TLS certificate")
+		flTLSKey       = flag.String("tls-key", "", "path to TLS private key")
 	)
 	flag.Parse()
 
@@ -120,6 +124,21 @@ func main() {
 	r.Handle("/scep", scepHandler)
 	r.Handle("/push/{udid}", pushHandlers.PushHandler)
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
+	srv := &http.Server{
+		Addr:              ":https",
+		Handler:           r,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       10 * time.Minute,
+		MaxHeaderBytes:    1 << 18, // 0.25 MB
+		TLSConfig:         tlsConfig(),
+	}
+
+	srvURL, err := url.Parse(sm.ServerPublicURL)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
 
 	errs := make(chan error, 2)
 	go func() {
@@ -129,13 +148,79 @@ func main() {
 	}()
 
 	go func() {
-		var httpAddr = "0.0.0.0:8080"
 		logger := log.NewContext(logger).With("transport", "HTTP")
-		logger.Log("addr", httpAddr)
-		errs <- http.ListenAndServe(
-			httpAddr, r)
+		if !*flTLS {
+			var httpAddr = "0.0.0.0:8080"
+			logger.Log("addr", httpAddr)
+			errs <- http.ListenAndServe(httpAddr, r)
+			return
+		}
+
+		tlsFromFile := (*flTLSCert != "" && *flTLSKey != "")
+		if tlsFromFile {
+			logger.Log("addr", srv.Addr)
+			errs <- serveTLS(srv, *flTLSCert, *flTLSKey)
+			return
+		} else {
+			logger.Log("addr", srv.Addr)
+			errs <- serveACME(srv, srvURL.Hostname())
+			return
+		}
 	}()
+
 	mainLogger.Log("terminated", <-errs)
+}
+
+func serveTLS(server *http.Server, certPath, keyPath string) error {
+	redirectTLS()
+	err := server.ListenAndServeTLS(certPath, keyPath)
+	return err
+}
+
+func serveACME(server *http.Server, domain string) error {
+	m := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(domain),
+		Cache:      autocert.DirCache("/var/db/le-certificates"),
+	}
+	server.TLSConfig.GetCertificate = m.GetCertificate
+	redirectTLS()
+	err := server.ListenAndServeTLS("", "")
+	return err
+}
+
+// redirects port 80 to port 443
+func redirectTLS() {
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Connection", "close")
+			url := "https://" + req.Host + req.URL.String()
+			http.Redirect(w, req, url, http.StatusMovedPermanently)
+		}),
+	}
+	go func() { stdlog.Fatal(srv.ListenAndServe()) }()
+}
+
+func tlsConfig() *tls.Config {
+	cfg := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences: []tls.CurveID{
+			tls.CurveP256,
+			tls.X25519,
+		},
+		MinVersion: tls.VersionTLS12,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		},
+	}
+	return cfg
 }
 
 type config struct {

@@ -1,5 +1,5 @@
 {
-    "memo": "d051154535b215b85193b9d45b252749d3ee8caa79ccd69e88feedc5490e7416",
+    "memo": "8ec26b54331ccbcbe914255b2e955a9f4aa1769f53accd011025f5ae2e986e4c",
     "projects": [
         {
             "name": "github.com/RobotsAndPencils/buford",
@@ -7,6 +7,7 @@
             "revision": "d6d71aff1447ced56016d09a5d74f4ea488a2d75",
             "packages": [
                 "payload",
+                "payload/badge",
                 "push"
             ]
         },
@@ -25,6 +26,7 @@
             "packages": [
                 "endpoint",
                 "log",
+                "metrics",
                 "transport/http"
             ]
         },
@@ -46,8 +48,8 @@
         },
         {
             "name": "github.com/gogo/protobuf",
-            "version": "v0.3",
-            "revision": "909568be09de550ed094403c2bf8a261b5bb730a",
+            "version": "v0.4",
+            "revision": "100ba4e885062801d56799d78530b73b178a78f3",
             "packages": [
                 "proto"
             ]
@@ -55,7 +57,7 @@
         {
             "name": "github.com/golang/protobuf",
             "branch": "master",
-            "revision": "8ee79997227bf9b34611aee7946ae64735e6fd93",
+            "revision": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317",
             "packages": [
                 "proto"
             ]
@@ -79,7 +81,7 @@
         {
             "name": "github.com/groob/plist",
             "branch": "master",
-            "revision": "a4f34fbabd9152a2140daa4a93606ee2ce868b98",
+            "revision": "43f06cf03cbc5bd95dd0ba102ac68efab25e1c65",
             "packages": [
                 "."
             ]
@@ -103,9 +105,12 @@
         {
             "name": "github.com/micromdm/scep",
             "branch": "master",
-            "revision": "083238ccae1d8bf63e82cf4f6d1c198feeb5294a",
+            "revision": "1b9e502944245d1d526ad49d39e7d7d3afd5e927",
             "packages": [
+                "depot",
                 "depot/bolt",
+                "scep",
+                "scep/internal/pkcs7",
                 "server"
             ]
         },
@@ -128,25 +133,31 @@
         {
             "name": "golang.org/x/crypto",
             "branch": "master",
-            "revision": "854ae91cdcbf914b499b1d7641d07859f3653481",
+            "revision": "728b753d0135da6801d45a38e6f43ff55779c5c2",
             "packages": [
-                "pkcs12"
+                "acme",
+                "acme/autocert",
+                "pkcs12",
+                "pkcs12/internal/rc2"
             ]
         },
         {
             "name": "golang.org/x/net",
             "branch": "master",
-            "revision": "f2499483f923065a842d38eb4c7f1927e6fc6e6d",
+            "revision": "a6577fac2d73be281a500b310739095313165611",
             "packages": [
                 "context",
                 "context/ctxhttp",
-                "http2"
+                "http2",
+                "http2/hpack",
+                "idna",
+                "lex/httplex"
             ]
         },
         {
             "name": "golang.org/x/sys",
             "branch": "master",
-            "revision": "d75a52659825e75fff6158388dddc6a5b04f9ba5",
+            "revision": "99f16d856c9836c42d24e7ab64ea72916925fa97",
             "packages": [
                 "unix"
             ]
