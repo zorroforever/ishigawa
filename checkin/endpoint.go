@@ -1,11 +1,11 @@
 package checkin
 
 import (
+	"context"
 	"errors"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/micromdm/mdm"
-	"golang.org/x/net/context"
 )
 
 // errInvalidMessageType is an invalid checking command.

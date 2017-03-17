@@ -1,9 +1,8 @@
 package enroll
 
 import (
+	"context"
 	"net/http"
-
-	"golang.org/x/net/context"
 
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -18,9 +17,7 @@ func ServiceHandler(ctx context.Context, svc Service, logger log.Logger) http.Ha
 	opts := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
 	}
-
 	r.Methods("GET").Path("/mdm/enroll").Handler(httptransport.NewServer(
-		ctx,
 		e.GetEnrollEndpoint,
 		decodeMDMEnrollRequest,
 		encodeResponse,

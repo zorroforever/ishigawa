@@ -1,12 +1,12 @@
 package checkin
 
 import (
+	"context"
 	"io"
 	"net/http"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/groob/plist"
-	"golang.org/x/net/context"
 )
 
 type HTTPHandlers struct {
@@ -17,7 +17,6 @@ type HTTPHandlers struct {
 func MakeHTTPHandlers(ctx context.Context, endpoints Endpoints, opts ...httptransport.ServerOption) HTTPHandlers {
 	h := HTTPHandlers{
 		CheckinHandler: httptransport.NewServer(
-			ctx,
 			endpoints.CheckinEndpoint,
 			decodeRequest,
 			encodeResponse,

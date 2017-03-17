@@ -1,13 +1,13 @@
 package command
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 
 	httptransport "github.com/go-kit/kit/transport/http"
-	"golang.org/x/net/context"
 )
 
 type HTTPHandlers struct {
@@ -17,7 +17,6 @@ type HTTPHandlers struct {
 func MakeHTTPHandlers(ctx context.Context, endpoints Endpoints, opts ...httptransport.ServerOption) HTTPHandlers {
 	h := HTTPHandlers{
 		NewCommandHandler: httptransport.NewServer(
-			ctx,
 			endpoints.NewCommandEndpoint,
 			decodeRequest,
 			encodeResponse,
@@ -39,24 +38,9 @@ type statuser interface {
 // The EncodeError should be passed to the Go-Kit httptransport as the
 // ServerErrorEncoder to encode error responses with JSON.
 func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
-	// unwrap Go-Kit Error
-	var domain string
-	if e, ok := err.(httptransport.Error); ok {
-		err = e.Err
-		domain = e.Domain
-	}
-
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 
-	switch domain {
-	case httptransport.DomainDecode:
-		w.WriteHeader(http.StatusBadRequest)
-	case httptransport.DomainDo:
-		w.WriteHeader(http.StatusServiceUnavailable)
-	default:
-		w.WriteHeader(codeFromErr(err))
-	}
 	enc.Encode(map[string]interface{}{
 		"error": err.Error(),
 	})

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/micromdm/mdm"
-	"golang.org/x/net/context"
 )
 
 var errEmptyRequest = errors.New("request must contain UDID of the device")

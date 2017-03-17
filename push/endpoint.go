@@ -1,10 +1,10 @@
 package push
 
 import (
+	"context"
 	"errors"
 
 	"github.com/go-kit/kit/endpoint"
-	"golang.org/x/net/context"
 )
 
 var errEmptyRequest = errors.New("request must contain UDID of the device")

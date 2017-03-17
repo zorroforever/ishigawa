@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -16,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -29,6 +29,7 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 
 	boltdepot "github.com/micromdm/scep/depot/bolt"
 	scep "github.com/micromdm/scep/server"
@@ -41,6 +42,8 @@ import (
 	"github.com/micromdm/nano/pubsub"
 	nanopush "github.com/micromdm/nano/push"
 )
+
+const configDBPath = "/var/db/micromdm"
 
 func serve(args []string) error {
 	flagset := flag.NewFlagSet("serve", flag.ExitOnError)
@@ -60,7 +63,7 @@ func serve(args []string) error {
 
 	logger := log.NewLogfmtLogger(os.Stderr)
 	stdlog.SetOutput(log.NewStdlibAdapter(logger)) // force structured logs
-	mainLogger := log.NewContext(logger).With("component", "main")
+	mainLogger := log.With(logger, "component", "main")
 	mainLogger.Log("msg", "started")
 
 	sm := &config{
@@ -68,6 +71,9 @@ func serve(args []string) error {
 		APNSCertificatePath: *flAPNSCertPath,
 		APNSPrivateKeyPass:  *flAPNSKeyPass,
 		APNSPrivateKeyPath:  *flAPNSKeyPath,
+	}
+	if err := os.MkdirAll(configDBPath, 0755); err != nil {
+		return errors.Wrapf(err, "creating config directory %s", configDBPath)
 	}
 	sm.setupPubSub()
 	sm.setupBolt()
@@ -88,7 +94,7 @@ func serve(args []string) error {
 	}
 
 	ctx := context.Background()
-	httpLogger := log.NewContext(logger).With("transport", "http")
+	httpLogger := log.With(logger, "transport", "http")
 	var checkinEndpoint endpoint.Endpoint
 	{
 		checkinEndpoint = checkin.MakeCheckinEndpoint(sm.checkinService)
@@ -147,7 +153,7 @@ func serve(args []string) error {
 	}()
 
 	go func() {
-		logger := log.NewContext(logger).With("transport", "HTTP")
+		logger := log.With(logger, "transport", "HTTP")
 		if !*flTLS {
 			var httpAddr = "0.0.0.0:8080"
 			logger.Log("addr", httpAddr)
@@ -278,7 +284,8 @@ func (c *config) setupBolt() {
 	if c.err != nil {
 		return
 	}
-	c.db, c.err = bolt.Open("mdm.db", 0777, nil)
+	dbPath := filepath.Join(configDBPath, "micromdm.db")
+	c.db, c.err = bolt.Open(dbPath, 0644, nil)
 	if c.err != nil {
 		return
 	}
@@ -404,7 +411,10 @@ func topicFromCert(cert *x509.Certificate) (string, error) {
 	return "", errors.New("could not find Push Topic (UserID OID) in certificate")
 }
 
-const scepCACertName = "SCEPCACert.pem"
+// TODO: refactor enroll service and remove the need to reference this cert.
+// but it might be useful to keep the PEM around for anyone who will need to export
+// the CA.
+const scepCACertName = "/var/db/micromdm/SCEPCACert.pem"
 
 func (c *config) setupSCEP(logger log.Logger) {
 	if c.err != nil {

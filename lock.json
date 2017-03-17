@@ -1,5 +1,5 @@
 {
-    "memo": "8ec26b54331ccbcbe914255b2e955a9f4aa1769f53accd011025f5ae2e986e4c",
+    "memo": "8f28fd12310c838617234aced70466223894111f2be4f1696581595e4403d1ae",
     "projects": [
         {
             "name": "github.com/RobotsAndPencils/buford",
@@ -21,8 +21,8 @@
         },
         {
             "name": "github.com/go-kit/kit",
-            "version": "v0.3.0",
-            "revision": "f66b0e13579bfc5a48b9e2a94b1209c107ea1f41",
+            "version": "v0.4.0",
+            "revision": "fadad6fffe0466b19df9efd9acde5c9a52df5fa4",
             "packages": [
                 "endpoint",
                 "log",
@@ -105,7 +105,7 @@
         {
             "name": "github.com/micromdm/scep",
             "branch": "master",
-            "revision": "576264a63d42bad5a423b870b3bde4f9f68320c1",
+            "revision": "a202afd5e358b857c95d048fc47432759db0d9bd",
             "packages": [
                 "depot",
                 "depot/bolt",

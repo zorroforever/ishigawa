@@ -1,8 +1,9 @@
 package enroll
 
 import (
+	"context"
+
 	"github.com/go-kit/kit/endpoint"
-	"golang.org/x/net/context"
 )
 
 type Endpoints struct {
