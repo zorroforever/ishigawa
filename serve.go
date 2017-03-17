@@ -8,7 +8,6 @@ import (
 	"encoding/asn1"
 	"encoding/pem"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	stdlog "log"
 	"net/http"
@@ -147,9 +146,11 @@ func serve(args []string) error {
 
 	errs := make(chan error, 2)
 	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
+		sig := make(chan os.Signal)
+		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		<-sig // block on signal then gracefully shutdown.
+		ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+		errs <- srv.Shutdown(ctx)
 	}()
 
 	go func() {
