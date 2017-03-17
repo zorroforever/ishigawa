@@ -105,7 +105,7 @@
         {
             "name": "github.com/micromdm/scep",
             "branch": "master",
-            "revision": "1b9e502944245d1d526ad49d39e7d7d3afd5e927",
+            "revision": "576264a63d42bad5a423b870b3bde4f9f68320c1",
             "packages": [
                 "depot",
                 "depot/bolt",

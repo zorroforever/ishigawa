@@ -73,7 +73,7 @@ func main() {
 	sm.setupPubSub()
 	sm.setupBolt()
 	sm.loadPushCerts()
-	sm.setupSCEP()
+	sm.setupSCEP(logger)
 	sm.setupEnrollmentService()
 	sm.setupCheckinService()
 	sm.setupPushService()
@@ -406,7 +406,7 @@ func topicFromCert(cert *x509.Certificate) (string, error) {
 
 const scepCACertName = "SCEPCACert.pem"
 
-func (c *config) setupSCEP() {
+func (c *config) setupSCEP(logger log.Logger) {
 	if c.err != nil {
 		return
 	}
@@ -438,6 +438,9 @@ func (c *config) setupSCEP() {
 		scep.ClientValidity(365),
 	}
 	c.scepService, c.err = scep.NewService(depot, opts...)
+	if c.err == nil {
+		c.scepService = scep.NewLoggingService(logger, c.scepService)
+	}
 }
 
 func savePEMKey(path string, key *rsa.PrivateKey) error {
