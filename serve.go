@@ -181,7 +181,7 @@ func serveACME(server *http.Server, domain string) error {
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(domain),
-		Cache:      autocert.DirCache("/var/db/le-certificates"),
+		Cache:      autocert.DirCache("/var/db/micromdm/le-certificates"),
 	}
 	server.TLSConfig.GetCertificate = m.GetCertificate
 	redirectTLS()
