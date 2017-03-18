@@ -52,8 +52,8 @@ func serve(args []string) error {
 	flagset := flag.NewFlagSet("serve", flag.ExitOnError)
 	var (
 		flServerURL    = flagset.String("server-url", "", "public HTTPS url of your server")
-		flAPNSCertPath = flagset.String("apns-certificate", "mdm.p12", "path to APNS certificate")
-		flAPNSKeyPass  = flagset.String("apns-password", "secret", "password for your APNS cert file.")
+		flAPNSCertPath = flagset.String("apns-cert", "mdm.p12", "path to APNS certificate")
+		flAPNSKeyPass  = flagset.String("apns-password", "secret", "password for your p12 APNS cert file (if using)")
 		flAPNSKeyPath  = flagset.String("apns-key", "", "path to key file if using .pem push cert")
 		flTLS          = flagset.Bool("tls", true, "use https")
 		flTLSCert      = flagset.String("tls-cert", "", "path to TLS certificate")
