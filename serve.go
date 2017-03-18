@@ -54,6 +54,8 @@ func serve(args []string) error {
 		flTLS          = flagset.Bool("tls", true, "use https")
 		flTLSCert      = flagset.String("tls-cert", "", "path to TLS certificate")
 		flTLSKey       = flagset.String("tls-key", "", "path to TLS private key")
+		flHTTPSAddr    = flagset.String("https-addr", ":https", "https listen address")
+		flRedirAddr    = flagset.String("redir-addr", ":http", "http redirect to https listen address")
 	)
 	flagset.Usage = usageFor(flagset, "micromdm serve [flags]")
 	if err := flagset.Parse(args); err != nil {
@@ -129,7 +131,7 @@ func serve(args []string) error {
 	r.Handle("/push/{udid}", pushHandlers.PushHandler)
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
 	srv := &http.Server{
-		Addr:              ":https",
+		Addr:              *flHTTPSAddr,
 		Handler:           r,
 		ReadTimeout:       60 * time.Second,
 		WriteTimeout:      60 * time.Second,
@@ -165,10 +167,12 @@ func serve(args []string) error {
 		tlsFromFile := (*flTLSCert != "" && *flTLSKey != "")
 		if tlsFromFile {
 			logger.Log("addr", srv.Addr)
+			redirectTLS(*flRedirAddr, sm.ServerPublicURL)
 			errs <- serveTLS(srv, *flTLSCert, *flTLSKey)
 			return
 		} else {
 			logger.Log("addr", srv.Addr)
+			redirectTLS(*flRedirAddr, sm.ServerPublicURL)
 			errs <- serveACME(srv, srvURL.Hostname())
 			return
 		}
@@ -179,7 +183,6 @@ func serve(args []string) error {
 }
 
 func serveTLS(server *http.Server, certPath, keyPath string) error {
-	redirectTLS()
 	err := server.ListenAndServeTLS(certPath, keyPath)
 	return err
 }
@@ -191,19 +194,21 @@ func serveACME(server *http.Server, domain string) error {
 		Cache:      autocert.DirCache("/var/db/micromdm/le-certificates"),
 	}
 	server.TLSConfig.GetCertificate = m.GetCertificate
-	redirectTLS()
 	err := server.ListenAndServeTLS("", "")
 	return err
 }
 
 // redirects port 80 to port 443
-func redirectTLS() {
+func redirectTLS(addr, serverUrl string) {
+	// trim trailing slash to avoid double slashes
+	trimmedServer := strings.TrimRight(serverUrl, "/")
 	srv := &http.Server{
+		Addr:         addr,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Connection", "close")
-			url := "https://" + req.Host + req.URL.String()
+			url := trimmedServer + req.URL.String()
 			http.Redirect(w, req, url, http.StatusMovedPermanently)
 		}),
 	}
