@@ -54,7 +54,7 @@ func serve(args []string) error {
 		flTLS          = flagset.Bool("tls", true, "use https")
 		flTLSCert      = flagset.String("tls-cert", "", "path to TLS certificate")
 		flTLSKey       = flagset.String("tls-key", "", "path to TLS private key")
-		flHTTPSAddr    = flagset.String("https-addr", ":https", "https listen address")
+		flHTTPAddr     = flagset.String("http-addr", ":https", "http(s) listen address of mdm server. defaults to :8080 if tls is false")
 		flRedirAddr    = flagset.String("redir-addr", ":http", "http redirect to https listen address")
 	)
 	flagset.Usage = usageFor(flagset, "micromdm serve [flags]")
@@ -131,7 +131,7 @@ func serve(args []string) error {
 	r.Handle("/push/{udid}", pushHandlers.PushHandler)
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
 	srv := &http.Server{
-		Addr:              *flHTTPSAddr,
+		Addr:              *flHTTPAddr,
 		Handler:           r,
 		ReadTimeout:       60 * time.Second,
 		WriteTimeout:      60 * time.Second,
@@ -158,7 +158,12 @@ func serve(args []string) error {
 	go func() {
 		logger := log.With(logger, "transport", "HTTP")
 		if !*flTLS {
-			var httpAddr = "0.0.0.0:8080"
+			var httpAddr string
+			if *flHTTPAddr == ":https" {
+				httpAddr = ":8080"
+			} else {
+				httpAddr = *flHTTPAddr
+			}
 			logger.Log("addr", httpAddr)
 			errs <- http.ListenAndServe(httpAddr, r)
 			return
