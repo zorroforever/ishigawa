@@ -23,6 +23,8 @@ func main() {
 	switch strings.ToLower(os.Args[1]) {
 	case "serve":
 		run = serve
+	case "deptoken":
+		run = depToken
 	default:
 		usage()
 		os.Exit(1)
@@ -39,6 +41,7 @@ func usage() error {
 
 Available Commands:
 	serve
+	deptoken
 	version
 
 Use micromdm <command> -h for additional usage of each command.

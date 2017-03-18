@@ -1,5 +1,5 @@
 {
-    "memo": "8f28fd12310c838617234aced70466223894111f2be4f1696581595e4403d1ae",
+    "memo": "8083a2cf13559fb206e86028e580bb739c2704e8e052742970dd35b5424aaeb9",
     "projects": [
         {
             "name": "github.com/RobotsAndPencils/buford",
@@ -17,6 +17,22 @@
             "revision": "583e8937c61f1af6513608ccc75c97b6abdf4ff9",
             "packages": [
                 "."
+            ]
+        },
+        {
+            "name": "github.com/fullsailor/pkcs7",
+            "branch": "master",
+            "revision": "eb67e7e564b9eae64dc7d95fae0784d6086a5fc4",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/garyburd/go-oauth",
+            "branch": "master",
+            "revision": "4f191fd0442e75c0c73bd00e4f5f27d4c08312ee",
+            "packages": [
+                "oauth"
             ]
         },
         {
@@ -90,6 +106,14 @@
             "name": "github.com/kr/logfmt",
             "branch": "master",
             "revision": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/micromdm/dep",
+            "branch": "master",
+            "revision": "38c81b11544f31c2be14e0b3bcfa12f656fcc709",
             "packages": [
                 "."
             ]
