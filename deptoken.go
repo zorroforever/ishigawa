@@ -66,9 +66,9 @@ func depToken(args []string) error {
 		if err != nil {
 			return err
 		}
+		defer certOut.Close()
 
 		pem.Encode(certOut, &pemBlock)
-		certOut.Close()
 
 		// fmt.Println("generated and saved key", keyPath)
 	} else {
@@ -137,7 +137,6 @@ func depToken(args []string) error {
 			return err
 		}
 
-		// fmt.Println("loaded cert", keyPath)
 	}
 
 	if *flPublicKey == "" && *flTokenFile == "" {
@@ -146,15 +145,17 @@ func depToken(args []string) error {
 	}
 
 	if *flPublicKey != "" {
-		if _, err := os.Stat(certPath); err == nil {
+		if _, err := os.Stat(certPath); os.IsExist(err) {
 			return errors.New("public key filename already exists, please choose another")
 		}
 		certOut, err := os.Create(*flPublicKey)
 		if err != nil {
 			return err
 		}
-		pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
-		certOut.Close()
+		defer certOut.Close()
+		if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert}); err != nil {
+			return err
+		}
 		fmt.Println("wrote", *flPublicKey)
 	}
 
@@ -195,6 +196,9 @@ func depToken(args []string) error {
 			return err
 		}
 		body, err := ioutil.ReadAll(tr.DotReader())
+		if err != nil {
+			return err
+		}
 
 		// the body part of the textproto is an almost PEM-like structure.
 		// unpack it as well.
@@ -226,19 +230,20 @@ func depToken(args []string) error {
 
 		sm := &config{}
 		sm.setupBolt()
-
-		err = sm.db.Update(func(tx *bolt.Tx) error {
-			b, err := tx.CreateBucketIfNotExists([]byte(depTokenBucket))
-			if err == nil {
-				err = b.Put([]byte(depConfig.ConsumerKey), tokenJSON)
-			}
-			return err
-		})
-
-		if err != nil {
+		if sm.err != nil {
 			return err
 		}
 
+		err = sm.db.Update(func(tx *bolt.Tx) error {
+			b, err := tx.CreateBucketIfNotExists([]byte(depTokenBucket))
+			if err != nil {
+				return err
+			}
+			return b.Put([]byte(depConfig.ConsumerKey), tokenJSON)
+		})
+		if err != nil {
+			return err
+		}
 		fmt.Println("saved token", depConfig.ConsumerKey)
 	}
 
