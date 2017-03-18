@@ -15,6 +15,9 @@
         "github.com/groob/plist": {
             "branch": "master"
         },
+        "github.com/micromdm/dep": {
+            "branch": "master"
+        },
         "github.com/micromdm/mdm": {
             "branch": "master"
         },

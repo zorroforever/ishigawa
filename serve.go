@@ -6,8 +6,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/asn1"
+	"encoding/json"
 	"encoding/pem"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	stdlog "log"
 	"net/http"
@@ -30,12 +32,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
+	"github.com/micromdm/dep"
 	boltdepot "github.com/micromdm/scep/depot/bolt"
 	scep "github.com/micromdm/scep/server"
 
 	"github.com/micromdm/nano/checkin"
 	"github.com/micromdm/nano/command"
 	"github.com/micromdm/nano/connect"
+	"github.com/micromdm/nano/depsync"
 	"github.com/micromdm/nano/device"
 	"github.com/micromdm/nano/enroll"
 	"github.com/micromdm/nano/pubsub"
@@ -85,6 +89,7 @@ func serve(args []string) error {
 	sm.setupPushService()
 	sm.setupCommandService()
 	sm.setupCommandQueue()
+	sm.setupDEPSync()
 	if sm.err != nil {
 		stdlog.Fatal(sm.err)
 	}
@@ -426,6 +431,66 @@ func topicFromCert(cert *x509.Certificate) (string, error) {
 // but it might be useful to keep the PEM around for anyone who will need to export
 // the CA.
 const scepCACertName = "/var/db/micromdm/SCEPCACert.pem"
+
+func (c *config) setupDEPSync() {
+	if c.err != nil {
+		return
+	}
+
+	// depsim config
+	depsim := true
+	conf := &dep.Config{
+		ConsumerKey:    "CK_48dd68d198350f51258e885ce9a5c37ab7f98543c4a697323d75682a6c10a32501cb247e3db08105db868f73f2c972bdb6ae77112aea803b9219eb52689d42e6",
+		ConsumerSecret: "CS_34c7b2b531a600d99a0e4edcf4a78ded79b86ef318118c2f5bcfee1b011108c32d5302df801adbe29d446eb78f02b13144e323eb9aad51c79f01e50cb45c3a68",
+		AccessToken:    "AT_927696831c59ba510cfe4ec1a69e5267c19881257d4bca2906a99d0785b785a6f6fdeb09774954fdd5e2d0ad952e3af52c6d8d2f21c924ba0caf4a031c158b89",
+		AccessSecret:   "AS_c31afd7a09691d83548489336e8ff1cb11b82b6bca13f793344496a556b1f4972eaff4dde6deb5ac9cf076fdfa97ec97699c34d515947b9cf9ed31c99dded6ba",
+	}
+
+	// try getting the oauth config from bolt
+
+	err := c.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(depTokenBucket))
+		if b == nil {
+			fmt.Println("no DEP server token found. using depsim")
+			return nil
+		}
+		_, v := b.Cursor().First()
+		if v == nil {
+			return nil
+		}
+		var token DEPTokenJSON
+		err := json.Unmarshal(v, &token)
+		if err != nil {
+			return err
+		}
+		conf.ConsumerSecret = token.ConsumerSecret
+		conf.ConsumerKey = token.ConsumerKey
+		conf.AccessSecret = token.AccessSecret
+		conf.AccessToken = token.AccessToken
+		// TODO handle expiration.
+		depsim = false
+		return nil
+	})
+	if err != nil {
+		c.err = err
+		return
+	}
+
+	depServerURL := "https://mdmenrollment.apple.com"
+	if depsim {
+		depServerURL = "http://dep.micromdm.io:9000"
+	}
+	client, err := dep.NewClient(conf, dep.ServerURL(depServerURL))
+	if err != nil {
+		c.err = err
+		return
+	}
+
+	_, c.err = depsync.New(client, c.pubclient)
+	if err != nil {
+		return
+	}
+}
 
 func (c *config) setupSCEP(logger log.Logger) {
 	if c.err != nil {

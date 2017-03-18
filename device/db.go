@@ -5,6 +5,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/micromdm/nano/checkin"
+	"github.com/micromdm/nano/depsync"
 	"github.com/micromdm/nano/pubsub"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -46,15 +47,21 @@ func (db *DB) Save(dev *Device) error {
 	if err != nil {
 		return errors.Wrap(err, "marshalling device")
 	}
-	indexes := []string{dev.UDID, dev.UUID}
+	// store an array of indices to reference the UUID, which will be the
+	// key used to store the actual device.
+	indexes := []string{dev.UDID, dev.SerialNumber}
 	for _, idx := range indexes {
 		if idx == "" {
 			continue
 		}
 		key := []byte(idx)
-		if err := bkt.Put(key, devproto); err != nil {
+		if err := bkt.Put(key, []byte(dev.UUID)); err != nil {
 			return errors.Wrap(err, "put device to boltdb")
 		}
+	}
+	key := []byte(dev.UUID)
+	if err := bkt.Put(key, devproto); err != nil {
+		return errors.Wrap(err, "put device to boltdb")
 	}
 	return tx.Commit()
 }
@@ -72,9 +79,33 @@ func (db *DB) DeviceByUDID(udid string) (*Device, error) {
 	var dev Device
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(DeviceBucket))
-		v := b.Get([]byte(udid))
-		if v == nil {
+		idx := b.Get([]byte(udid))
+		if idx == nil {
 			return &notFound{"Device", fmt.Sprintf("udid %s", udid)}
+		}
+		v := b.Get(idx)
+		if idx == nil {
+			return &notFound{"Device", fmt.Sprintf("uuid %s", string(idx))}
+		}
+		return UnmarshalDevice(v, &dev)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &dev, nil
+}
+
+func (db *DB) DeviceBySerial(serial string) (*Device, error) {
+	var dev Device
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(DeviceBucket))
+		idx := b.Get([]byte(serial))
+		if idx == nil {
+			return &notFound{"Device", fmt.Sprintf("serial %s", serial)}
+		}
+		v := b.Get(idx)
+		if idx == nil {
+			return &notFound{"Device", fmt.Sprintf("uuid %s", string(idx))}
 		}
 		return UnmarshalDevice(v, &dev)
 	})
@@ -107,6 +138,11 @@ func (db *DB) pollCheckin(sub pubsub.Subscriber) error {
 		return errors.Wrapf(err,
 			"subscribing devices to %s topic", checkin.CheckoutTopic)
 	}
+	depSyncEvents, err := sub.Subscribe("devices", depsync.SyncTopic)
+	if err != nil {
+		return errors.Wrapf(err,
+			"subscribing devices to %s topic", depsync.SyncTopic)
+	}
 	go func() {
 		for {
 			select {
@@ -116,28 +152,36 @@ func (db *DB) pollCheckin(sub pubsub.Subscriber) error {
 					fmt.Println(err)
 					continue
 				}
+				newDevice := new(Device)
+				bySerial, err := db.DeviceBySerial(ev.Command.SerialNumber)
+				if err == nil && bySerial != nil { // must be a DEP device
+					newDevice = bySerial
+				}
+				if err != nil && !isNotFound(err) {
+					fmt.Println(err) // some other issue is going on
+				}
 				_, err = db.DeviceByUDID(ev.Command.UDID)
-				if err != nil {
-					if isNotFound(err) {
-						if err := db.Save(&Device{
-							UUID:         uuid.NewV4().String(),
-							UDID:         ev.Command.UDID,
-							OSVersion:    ev.Command.OSVersion,
-							BuildVersion: ev.Command.BuildVersion,
-							ProductName:  ev.Command.ProductName,
-							SerialNumber: ev.Command.SerialNumber,
-							IMEI:         ev.Command.IMEI,
-							MEID:         ev.Command.MEID,
-							DeviceName:   ev.Command.DeviceName,
-							// Challenge:    ev.Command.Challenge,
-							Model:     ev.Command.Model,
-							ModelName: ev.Command.ModelName,
-						}); err != nil {
-							fmt.Println(err)
-							continue
-						}
-						continue
-					}
+				if err != nil && isNotFound(err) { // never checked in
+					fmt.Printf("checking in new device %s\n", ev.Command.SerialNumber)
+				} else if err != nil {
+					fmt.Println(err)
+				} else if err == nil {
+					fmt.Printf("re-enrolling device %s\n", ev.Command.SerialNumber)
+				}
+				newDevice.UUID = uuid.NewV4().String()
+				newDevice.UDID = ev.Command.UDID
+				newDevice.OSVersion = ev.Command.OSVersion
+				newDevice.BuildVersion = ev.Command.BuildVersion
+				newDevice.ProductName = ev.Command.ProductName
+				newDevice.SerialNumber = ev.Command.SerialNumber
+				newDevice.IMEI = ev.Command.IMEI
+				newDevice.MEID = ev.Command.MEID
+				newDevice.DeviceName = ev.Command.DeviceName
+				newDevice.Model = ev.Command.Model
+				newDevice.ModelName = ev.Command.ModelName
+				// Challenge:    ev.Command.Challenge, // FIXME: @groob why is this commented out?
+
+				if err := db.Save(newDevice); err != nil {
 					fmt.Println(err)
 					continue
 				}
@@ -163,6 +207,43 @@ func (db *DB) pollCheckin(sub pubsub.Subscriber) error {
 				if err := db.Save(dev); err != nil {
 					fmt.Println(err)
 					continue
+				}
+			case event := <-depSyncEvents:
+				var ev depsync.Event
+				if err := depsync.UnmarshalEvent(event.Message, &ev); err != nil {
+					fmt.Println(err)
+					continue
+				}
+				fmt.Printf("got %d devices from DEP\n", len(ev.Devices))
+				for _, d := range ev.Devices {
+					newDevice := new(Device)
+					bySerial, err := db.DeviceBySerial(d.SerialNumber)
+					if err == nil && bySerial != nil { // must be a DEP device
+						fmt.Printf("existing device checked in from DEP: %s\n", d.SerialNumber)
+						newDevice = bySerial
+					}
+					if err != nil && !isNotFound(err) {
+						fmt.Println(err) // some other issue is going on
+						continue
+					}
+					if newDevice.UUID == "" { // previously unknown
+						newDevice.UUID = uuid.NewV4().String()
+					}
+					newDevice.SerialNumber = d.SerialNumber
+					newDevice.Model = d.Model
+					newDevice.Description = d.Description
+					newDevice.Color = d.Color
+					newDevice.AssetTag = d.AssetTag
+					newDevice.DEPProfileStatus = DEPProfileStatus(d.ProfileStatus)
+					newDevice.DEPProfileUUID = d.ProfileUUID
+					newDevice.DEPProfileAssignTime = d.ProfileAssignTime
+					newDevice.DEPProfileAssignedDate = d.DeviceAssignedDate
+					newDevice.DEPProfileAssignedBy = d.DeviceAssignedBy
+					// TODO: deal with sync fields OpType, OpDate
+					if err := db.Save(newDevice); err != nil {
+						fmt.Println(err)
+						continue
+					}
 				}
 			case event := <-checkoutEvents:
 				var ev checkin.Event

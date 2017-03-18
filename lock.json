@@ -1,5 +1,5 @@
 {
-    "memo": "8083a2cf13559fb206e86028e580bb739c2704e8e052742970dd35b5424aaeb9",
+    "memo": "877eab51bef6d9f956e53012ffbc61f2f41ee98472eb9b13c54ed57ab84b697e",
     "projects": [
         {
             "name": "github.com/RobotsAndPencils/buford",
@@ -157,7 +157,7 @@
         {
             "name": "golang.org/x/crypto",
             "branch": "master",
-            "revision": "728b753d0135da6801d45a38e6f43ff55779c5c2",
+            "revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
             "packages": [
                 "acme",
                 "acme/autocert",
