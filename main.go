@@ -27,6 +27,8 @@ func main() {
 		run = depToken
 	case "get":
 		run = getResource
+	case "apply":
+		run = applyResource
 	default:
 		usage()
 		os.Exit(1)
