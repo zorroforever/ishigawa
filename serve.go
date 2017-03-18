@@ -432,11 +432,10 @@ func topicFromCert(cert *x509.Certificate) (string, error) {
 // the CA.
 const scepCACertName = "/var/db/micromdm/SCEPCACert.pem"
 
-func (c *config) setupDEPSync() {
+func (c *config) depClient() (dep.Client, error) {
 	if c.err != nil {
-		return
+		return nil, c.err
 	}
-
 	// depsim config
 	depsim := true
 	conf := &dep.Config{
@@ -472,8 +471,7 @@ func (c *config) setupDEPSync() {
 		return nil
 	})
 	if err != nil {
-		c.err = err
-		return
+		return nil, err
 	}
 
 	depServerURL := "https://mdmenrollment.apple.com"
@@ -481,6 +479,19 @@ func (c *config) setupDEPSync() {
 		depServerURL = "http://dep.micromdm.io:9000"
 	}
 	client, err := dep.NewClient(conf, dep.ServerURL(depServerURL))
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func (c *config) setupDEPSync() {
+	if c.err != nil {
+		return
+	}
+
+	client, err := c.depClient()
 	if err != nil {
 		c.err = err
 		return

@@ -25,6 +25,8 @@ func main() {
 		run = serve
 	case "deptoken":
 		run = depToken
+	case "get":
+		run = getResource
 	default:
 		usage()
 		os.Exit(1)
@@ -41,6 +43,7 @@ func usage() error {
 
 Available Commands:
 	serve
+	get
 	deptoken
 	version
 
