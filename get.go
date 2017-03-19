@@ -104,6 +104,8 @@ func getDepDevice(client dep.Client, args []string) error {
 		enc.SetIndent("", "  ")
 		err = enc.Encode(dev)
 		return err
+	} else {
+		return errors.New("no device information")
 	}
 	return nil
 }
