@@ -18,6 +18,7 @@ message Command {
     string request_type = 1;
     DeviceInformation device_information = 2;
     InstallProfile install_profile = 3;
+    InstallApplication install_application = 4;
 }
 
 message DeviceInformation {
@@ -28,3 +29,12 @@ message InstallProfile {
     bytes payload = 1;
 }
 
+
+message InstallApplication {
+	int64 itunes_store_id = 1;
+	string identifier = 2;
+	string manifest_url = 3;
+	int64 management_flags = 4;
+	bool not_managed = 5;
+	string change_management_state = 6;
+}

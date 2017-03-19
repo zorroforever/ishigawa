@@ -47,6 +47,16 @@ func MarshalEvent(e *Event) ([]byte, error) {
 		payload.Command.InstallProfile = &commandproto.InstallProfile{
 			Payload: e.Payload.Command.InstallProfile.Payload,
 		}
+	case "InstallApplication":
+		cmd := e.Payload.Command.InstallApplication
+		payload.Command.InstallApplication = &commandproto.InstallApplication{
+			ItunesStoreId:         int64(cmd.ITunesStoreID),
+			Identifier:            cmd.Identifier,
+			ManifestUrl:           cmd.ManifestURL,
+			ManagementFlags:       int64(cmd.ManagementFlags),
+			NotManaged:            cmd.NotManaged,
+			ChangeManagementState: cmd.ChangeManagementState,
+		}
 	}
 	return proto.Marshal(&commandproto.Event{
 		Id:         e.ID,
@@ -87,6 +97,15 @@ func UnmarshalEvent(data []byte, e *Event) error {
 	case "InstallProfile":
 		e.Payload.Command.InstallProfile = mdm.InstallProfile{
 			Payload: pb.Payload.Command.InstallProfile.Payload,
+		}
+	case "InstallApplication":
+		cmd := pb.Payload.Command.GetInstallApplication()
+		e.Payload.Command.InstallApplication = mdm.InstallApplication{
+			ITunesStoreID:         int(cmd.GetItunesStoreId()),
+			Identifier:            cmd.GetIdentifier(),
+			ManifestURL:           cmd.GetManifestUrl(),
+			ManagementFlags:       int(cmd.GetManagementFlags()),
+			ChangeManagementState: cmd.GetChangeManagementState(),
 		}
 	}
 	return nil
