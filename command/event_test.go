@@ -9,7 +9,7 @@ import (
 	"github.com/groob/plist"
 	"github.com/micromdm/mdm"
 
-	"github.com/micromdm/nano/command"
+	"github.com/micromdm/micromdm/command"
 )
 
 var marshalTests = []string{

@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/boltdb/bolt"
-	"github.com/micromdm/nano/checkin"
-	"github.com/micromdm/nano/depsync"
-	"github.com/micromdm/nano/pubsub"
+	"github.com/micromdm/micromdm/checkin"
+	"github.com/micromdm/micromdm/depsync"
+	"github.com/micromdm/micromdm/pubsub"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 )

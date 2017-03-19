@@ -5,8 +5,8 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/groob/plist"
-	"github.com/micromdm/nano/command"
-	"github.com/micromdm/nano/pubsub"
+	"github.com/micromdm/micromdm/command"
+	"github.com/micromdm/micromdm/pubsub"
 	"github.com/pkg/errors"
 )
 

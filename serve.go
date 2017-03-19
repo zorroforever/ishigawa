@@ -38,14 +38,14 @@ import (
 	boltdepot "github.com/micromdm/scep/depot/bolt"
 	scep "github.com/micromdm/scep/server"
 
-	"github.com/micromdm/nano/checkin"
-	"github.com/micromdm/nano/command"
-	"github.com/micromdm/nano/connect"
-	"github.com/micromdm/nano/depsync"
-	"github.com/micromdm/nano/device"
-	"github.com/micromdm/nano/enroll"
-	"github.com/micromdm/nano/pubsub"
-	nanopush "github.com/micromdm/nano/push"
+	"github.com/micromdm/micromdm/checkin"
+	"github.com/micromdm/micromdm/command"
+	"github.com/micromdm/micromdm/connect"
+	"github.com/micromdm/micromdm/depsync"
+	"github.com/micromdm/micromdm/device"
+	"github.com/micromdm/micromdm/enroll"
+	"github.com/micromdm/micromdm/pubsub"
+	nanopush "github.com/micromdm/micromdm/push"
 )
 
 const configDBPath = "/var/db/micromdm"

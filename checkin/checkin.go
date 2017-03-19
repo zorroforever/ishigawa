@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
-	"github.com/micromdm/nano/pubsub"
+	"github.com/micromdm/micromdm/pubsub"
 )
 
 // CheckinBucket is the *bolt.DB bucket where checkins are archived.

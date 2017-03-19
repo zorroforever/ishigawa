@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/micromdm/dep"
-	"github.com/micromdm/nano/pubsub"
+	"github.com/micromdm/micromdm/pubsub"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/micromdm/mdm"
-	"github.com/micromdm/nano/command/internal/commandproto"
+	"github.com/micromdm/micromdm/command/internal/commandproto"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 )

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/micromdm/nano/device/internal/deviceproto"
+	"github.com/micromdm/micromdm/device/internal/deviceproto"
 	"github.com/pkg/errors"
 )
 

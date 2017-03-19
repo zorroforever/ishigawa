@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/boltdb/bolt"
-	"github.com/micromdm/nano/checkin"
-	"github.com/micromdm/nano/pubsub"
+	"github.com/micromdm/micromdm/checkin"
+	"github.com/micromdm/micromdm/pubsub"
 	"github.com/pkg/errors"
 )
 

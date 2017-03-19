@@ -5,7 +5,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/micromdm/mdm"
-	"github.com/micromdm/nano/pubsub"
+	"github.com/micromdm/micromdm/pubsub"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )

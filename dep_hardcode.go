@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/micromdm/mdm"
-	"github.com/micromdm/nano/checkin"
-	"github.com/micromdm/nano/command"
+	"github.com/micromdm/micromdm/checkin"
+	"github.com/micromdm/micromdm/command"
 	"github.com/pkg/errors"
 )
 

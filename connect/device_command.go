@@ -2,7 +2,7 @@ package connect
 
 import (
 	"github.com/gogo/protobuf/proto"
-	"github.com/micromdm/nano/connect/internal/devicecommandproto"
+	"github.com/micromdm/micromdm/connect/internal/devicecommandproto"
 	"github.com/pkg/errors"
 )
 

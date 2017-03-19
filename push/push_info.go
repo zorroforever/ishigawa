@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/micromdm/nano/push/internal/pushproto"
+	"github.com/micromdm/micromdm/push/internal/pushproto"
 )
 
 type PushInfo struct {

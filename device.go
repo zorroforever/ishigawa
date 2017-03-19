@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/boltdb/bolt"
-	"github.com/micromdm/nano/device"
+	"github.com/micromdm/micromdm/device"
 )
 
 // TODO this is a temporary command to get some stuff working
