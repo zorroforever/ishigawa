@@ -195,28 +195,23 @@ func depToken(args []string) error {
 		if _, err := tr.ReadMIMEHeader(); err != nil {
 			return err
 		}
-		body, err := ioutil.ReadAll(tr.DotReader())
-		if err != nil {
-			return err
+		tokenJSON := new(bytes.Buffer)
+		for {
+			line, err := tr.ReadLineBytes()
+			if err != nil && err == io.EOF {
+				break
+			} else if err != nil {
+				return err
+			}
+			line = bytes.Trim(line, "-----BEGIN MESSAGE-----")
+			line = bytes.Trim(line, "-----END MESSAGE-----")
+			if _, err := tokenJSON.Write(line); err != nil {
+				return err
+			}
 		}
 
-		// the body part of the textproto is an almost PEM-like structure.
-		// unpack it as well.
-
-		startFound := bytes.Index(body, []byte("-----BEGIN MESSAGE-----"))
-		endFound := bytes.Index(body, []byte("-----END MESSAGE-----"))
-
-		if endFound <= startFound {
-			return errors.New("invalid format in decrypted message")
-		}
-
-		// finally the JSON for the token values!
-
-		tokenJSON := body[startFound+24 : endFound-1]
-
-		depToken := &DEPTokenJSON{}
-
-		err = json.Unmarshal(tokenJSON, depToken)
+		var depToken DEPTokenJSON
+		err = json.Unmarshal(tokenJSON.Bytes(), &depToken)
 		if err != nil {
 			return err
 		}
@@ -239,7 +234,7 @@ func depToken(args []string) error {
 			if err != nil {
 				return err
 			}
-			return b.Put([]byte(depConfig.ConsumerKey), tokenJSON)
+			return b.Put([]byte(depConfig.ConsumerKey), tokenJSON.Bytes())
 		})
 		if err != nil {
 			return err
