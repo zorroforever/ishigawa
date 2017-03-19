@@ -132,7 +132,7 @@ func getDepProfileTpl(client dep.Client, args []string) error {
 		OrgMagic:              "(Optional)",
 		AnchorCerts:           []string{},
 		SupervisingHostCerts:  []string{},
-		SkipSetupItems:        []string{},
+		SkipSetupItems:        []string{"AppleID", "Android"},
 		Department:            "(Optional) support@example.com",
 		Devices:               []string{},
 	}
@@ -155,7 +155,7 @@ func getDepProfileTpl(client dep.Client, args []string) error {
   "org_magic": "(Optional)",
   "anchor_certs": [],
   "supervising_host_certs": [],
-  "skip_setup_items": [],
+  "skip_setup_items": ["AppleID", "Android"],
   "deparment": "(Optional) support@example.com",
   "devices": []
 }`
