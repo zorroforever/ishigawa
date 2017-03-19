@@ -60,6 +60,9 @@ func getDep(args []string) error {
 		run = getDepProfile
 	case "profile-template":
 		run = getDepProfileTpl
+	default:
+		usage()
+		os.Exit(1)
 	}
 
 	if err := run(client, args[1:]); err != nil {
