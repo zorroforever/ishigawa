@@ -46,6 +46,7 @@ func usage() error {
 Available Commands:
 	serve
 	get
+	apply
 	deptoken
 	version
 
