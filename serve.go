@@ -404,12 +404,7 @@ func (c *config) setupEnrollmentService() {
 		c.err = err
 		return
 	}
-	pub, err := url.Parse(c.ServerPublicURL)
-	if err != nil {
-		c.err = err
-		return
-	}
-	SCEPRemoteURL := "https://" + strings.Split(pub.Host, ":")[0] + "/scep"
+	SCEPRemoteURL := strings.TrimRight(c.ServerPublicURL, "/") + "/scep"
 
 	var tlsCert string
 	var SCEPCertificateSubject string
