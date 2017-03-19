@@ -160,7 +160,7 @@ func serve(args []string) error {
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
 
 	if *flRepoPath != "" {
-		r.Handle("/repo/", http.StripPrefix("/repo/", http.FileServer(http.Dir(*flRepoPath))))
+		r.PathPrefix("/repo/").Handler(http.StripPrefix("/repo/", http.FileServer(http.Dir(*flRepoPath))))
 	}
 
 	var handler http.Handler

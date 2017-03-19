@@ -68,9 +68,19 @@ func hardcodeList(svc command.Service, udid string) error {
 		},
 	}
 
+	munki := &mdm.CommandRequest{
+		RequestType: "InstallApplication",
+		UDID:        udid,
+		InstallApplication: mdm.InstallApplication{
+			ManifestURL:     "https://dev.micromdm.io/repo/munkitools-2.8.2.2855.plist",
+			ManagementFlags: 1,
+		},
+	}
+
 	var requests = []*mdm.CommandRequest{
 		devInfo,
 		installProfile,
+		munki,
 		devConfigured,
 	}
 
