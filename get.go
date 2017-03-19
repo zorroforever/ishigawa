@@ -58,6 +58,8 @@ func getDep(args []string) error {
 		run = getDepDevice
 	case "profile":
 		run = getDepProfile
+	case "profile-template":
+		run = getDepProfileTpl
 	}
 
 	if err := run(client, args[1:]); err != nil {
@@ -107,5 +109,54 @@ func getDepDevice(client dep.Client, args []string) error {
 	} else {
 		return errors.New("no device information")
 	}
+	return nil
+}
+
+func getDepProfileTpl(client dep.Client, args []string) error {
+	/* omitempty flags on the Profile struct are preventing the (Apple-
+	   defined) false defaults from showing up in the example.
+
+	p := dep.Profile{
+		ProfileName:           "(Required) Human readable name",
+		URL:                   "https://mymdm.example.org",
+		AllowPairing:          true,
+		IsSupervised:          false,
+		IsMultiUser:           false,
+		IsMandatory:           false,
+		AwaitDeviceConfigured: false,
+		IsMDMRemovable:        true,
+		SupportPhoneNumber:    "(Optional) +1 408 555 1010",
+		SupportEmailAddress:   "(Optional) support@example.com",
+		OrgMagic:              "(Optional)",
+		AnchorCerts:           []string{},
+		SupervisingHostCerts:  []string{},
+		SkipSetupItems:        []string{},
+		Department:            "(Optional) support@example.com",
+		Devices:               []string{},
+	}
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err := enc.Encode(&p)
+	*/
+
+	resp := `{
+  "profile_name": "(Required) Human readable name",
+  "url": "https://mymdm.example.org",
+  "allow_pairing": true,
+  "is_supervised": false,
+  "is_multi_user": false,
+  "is_mandatory": false,
+  "await_device_configured": false,
+  "is_mdm_removable": true,
+  "support_phone_number": "(Optional) +1 408 555 1010",
+  "support_email_address": "(Optional) support@example.com",
+  "org_magic": "(Optional)",
+  "anchor_certs": [],
+  "supervising_host_certs": [],
+  "skip_setup_items": [],
+  "deparment": "(Optional) support@example.com",
+  "devices": []
+}`
+	fmt.Println(resp)
 	return nil
 }
