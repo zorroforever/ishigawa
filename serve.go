@@ -10,9 +10,11 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	stdlog "log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/signal"
@@ -60,6 +62,7 @@ func serve(args []string) error {
 		flTLSKey       = flagset.String("tls-key", "", "path to TLS private key")
 		flHTTPAddr     = flagset.String("http-addr", ":https", "http(s) listen address of mdm server. defaults to :8080 if tls is false")
 		flRedirAddr    = flagset.String("redir-addr", ":http", "http redirect to https listen address")
+		flHTTPDebug    = flagset.Bool("http-debug", false, "enable debug for http(dumps full request)")
 	)
 	flagset.Usage = usageFor(flagset, "micromdm serve [flags]")
 	if err := flagset.Parse(args); err != nil {
@@ -131,13 +134,20 @@ func serve(args []string) error {
 	enrollHandler := enroll.ServiceHandler(ctx, sm.enrollService, httpLogger)
 	r := mux.NewRouter()
 	r.Handle("/mdm/checkin", checkinHandlers.CheckinHandler).Methods("PUT")
-	r.Handle("/mdm/enroll", enrollHandler)
+	r.Handle("/mdm/enroll", enrollHandler).Methods("GET", "POST", "PUT")
 	r.Handle("/scep", scepHandler)
 	r.Handle("/push/{udid}", pushHandlers.PushHandler)
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
+
+	var handler http.Handler
+	if *flHTTPDebug {
+		handler = debugHTTPmiddleware(r)
+	} else {
+		handler = r
+	}
 	srv := &http.Server{
 		Addr:              *flHTTPAddr,
-		Handler:           r,
+		Handler:           handler,
 		ReadTimeout:       60 * time.Second,
 		WriteTimeout:      60 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
@@ -170,7 +180,7 @@ func serve(args []string) error {
 				httpAddr = *flHTTPAddr
 			}
 			logger.Log("addr", httpAddr)
-			errs <- http.ListenAndServe(httpAddr, r)
+			errs <- http.ListenAndServe(httpAddr, handler)
 			return
 		}
 
@@ -570,4 +580,18 @@ func savePEMCert(path string, cert *x509.Certificate) error {
 			Type:  "CERTIFICATE",
 			Bytes: cert.Raw,
 		})
+}
+
+func debugHTTPmiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := io.TeeReader(r.Body, os.Stderr)
+		r.Body = ioutil.NopCloser(body)
+		out, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			stdlog.Println(err)
+		}
+		fmt.Println("")
+		fmt.Println(string(out))
+		fmt.Println("")
+	})
 }
