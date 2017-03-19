@@ -21,8 +21,7 @@ func getResource(args []string) error {
 	case "dep":
 		run = getDep
 	default:
-		usage()
-		os.Exit(1)
+		return errors.New("invalid dep resource name")
 	}
 
 	if err := run(args[1:]); err != nil {
