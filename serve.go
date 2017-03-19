@@ -593,5 +593,6 @@ func debugHTTPmiddleware(next http.Handler) http.Handler {
 		fmt.Println("")
 		fmt.Println(string(out))
 		fmt.Println("")
+		next.ServeHTTP(w, r)
 	})
 }
