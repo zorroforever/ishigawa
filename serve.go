@@ -63,6 +63,7 @@ func serve(args []string) error {
 		flHTTPAddr     = flagset.String("http-addr", ":https", "http(s) listen address of mdm server. defaults to :8080 if tls is false")
 		flRedirAddr    = flagset.String("redir-addr", ":http", "http redirect to https listen address")
 		flHTTPDebug    = flagset.Bool("http-debug", false, "enable debug for http(dumps full request)")
+		flRepoPath     = flagset.String("filerepo", "", "path to http file repo")
 	)
 	flagset.Usage = usageFor(flagset, "micromdm serve [flags]")
 	if err := flagset.Parse(args); err != nil {
@@ -97,6 +98,10 @@ func serve(args []string) error {
 		stdlog.Fatal(sm.err)
 	}
 
+	if err := hardcodeCommands(sm); err != nil {
+		stdlog.Fatal(err)
+	}
+
 	_, err := device.NewDB(sm.db, sm.pubclient)
 	if err != nil {
 		stdlog.Fatal(err)
@@ -127,7 +132,11 @@ func serve(args []string) error {
 		NewCommandEndpoint: command.MakeNewCommandEndpoint(sm.commandService),
 	}
 
-	commandHandlers := command.MakeHTTPHandlers(ctx, commandEndpoints, checkinOpts...)
+	connectOpts := []httptransport.ServerOption{
+		httptransport.ServerErrorLogger(httpLogger),
+		httptransport.ServerErrorEncoder(connect.EncodeError),
+	}
+	commandHandlers := command.MakeHTTPHandlers(ctx, commandEndpoints, connectOpts...)
 
 	var connectEndpoint endpoint.Endpoint
 	{
@@ -137,7 +146,7 @@ func serve(args []string) error {
 		ConnectEndpoint: connectEndpoint,
 	}
 
-	connectHandlers := connect.MakeHTTPHandlers(ctx, connectEndpoints, checkinOpts...)
+	connectHandlers := connect.MakeHTTPHandlers(ctx, connectEndpoints, connectOpts...)
 
 	pushHandlers := nanopush.MakeHTTPHandlers(ctx, pushEndpoints, checkinOpts...)
 	scepHandler := scep.ServiceHandler(ctx, sm.scepService, httpLogger)
@@ -149,6 +158,10 @@ func serve(args []string) error {
 	r.Handle("/scep", scepHandler)
 	r.Handle("/push/{udid}", pushHandlers.PushHandler)
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
+
+	if *flRepoPath != "" {
+		r.Handle("/repo/", http.StripPrefix("/repo/", http.FileServer(http.Dir(*flRepoPath))))
+	}
 
 	var handler http.Handler
 	if *flHTTPDebug {

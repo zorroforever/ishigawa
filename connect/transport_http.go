@@ -3,7 +3,6 @@ package connect
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -36,7 +35,7 @@ type errorWrapper struct {
 
 func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var req mdmConnectRequest
-	err := plist.NewDecoder(io.LimitReader(r.Body, 10000)).Decode(&req)
+	err := plist.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
@@ -48,7 +47,10 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		return nil
 	}
 
+	resp := response.(mdmConnectResponse)
+
 	w.WriteHeader(http.StatusOK)
+	w.Write(resp.payload)
 	return nil
 }
 

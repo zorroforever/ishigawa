@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/boltdb/bolt"
+	"github.com/groob/plist"
 	"github.com/micromdm/nano/command"
 	"github.com/micromdm/nano/pubsub"
 	"github.com/pkg/errors"
@@ -49,7 +50,7 @@ func (db *Queue) Save(cmd *DeviceCommand) error {
 	}
 	key := []byte(cmd.DeviceUDID)
 	if err := bkt.Put(key, devproto); err != nil {
-		return errors.Wrap(err, "put DeviceCOmmand to boltdb")
+		return errors.Wrap(err, "put DeviceCommand to boltdb")
 	}
 	return tx.Commit()
 }
@@ -94,22 +95,27 @@ func (db *Queue) pollCommands(sub pubsub.Subscriber) error {
 					fmt.Println(err)
 					continue
 				}
-				cmd, _ := db.DeviceCommand(ev.DeviceUDID)
-				if cmd == nil {
-					cmd = &DeviceCommand{
-						DeviceUDID: ev.DeviceUDID,
-						Commands: []Command{{
-							UUID:    ev.Payload.CommandUUID,
-							Payload: nil, // TODO
-						}},
-					}
-				} else {
-					cmd.Commands = append(cmd.Commands, Command{
-						UUID:    ev.Payload.CommandUUID,
-						Payload: nil, // TODO
-					})
-				}
 
+				cmd := new(DeviceCommand)
+				cmd.DeviceUDID = ev.DeviceUDID
+				byUDID, err := db.DeviceCommand(ev.DeviceUDID)
+				if err == nil && byUDID != nil {
+					cmd = byUDID
+				}
+				newPayload, err := plist.Marshal(&ev.Payload)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				newCmd := Command{
+					UUID:    ev.Payload.CommandUUID,
+					Payload: newPayload,
+				}
+				cmd.Commands = append(cmd.Commands, newCmd)
+				if err := db.Save(cmd); err != nil {
+					fmt.Println(err)
+					continue
+				}
 				fmt.Printf("queued event for device: %s\n", ev.DeviceUDID)
 			}
 		}

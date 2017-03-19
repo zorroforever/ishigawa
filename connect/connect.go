@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"log"
 
 	"golang.org/x/net/context"
 
@@ -29,5 +30,23 @@ func New(queue *Queue) (ConnectService, error) {
 
 func (svc *connectSvc) Acknowledge(ctx context.Context, req mdm.Response) (payload []byte, err error) {
 	fmt.Printf("connected udid=%s type=%s, status=%s\n", req.UDID, req.RequestType, req.Status)
-	return nil, nil
+	dc, err := svc.queue.DeviceCommand(req.UDID)
+	if err != nil {
+		log.Println(err)
+		return nil, nil
+	}
+
+	if len(dc.Commands) == 0 {
+		return nil, nil
+	}
+	payload = dc.Commands[0].Payload
+
+	// delete first element
+	dc.Commands = append(dc.Commands[:0], dc.Commands[0+1:]...)
+
+	if err := svc.queue.Save(dc); err != nil {
+		return nil, err
+	}
+
+	return payload, nil
 }
