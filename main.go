@@ -29,6 +29,8 @@ func main() {
 		run = getResource
 	case "apply":
 		run = applyResource
+	case "dev":
+		run = dev
 	default:
 		usage()
 		os.Exit(1)

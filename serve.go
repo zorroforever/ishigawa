@@ -99,7 +99,7 @@ func serve(args []string) error {
 
 	_, err := device.NewDB(sm.db, sm.pubclient)
 	if err != nil {
-		stdlog.Fatal(sm.err)
+		stdlog.Fatal(err)
 	}
 
 	ctx := context.Background()
@@ -129,12 +129,23 @@ func serve(args []string) error {
 
 	commandHandlers := command.MakeHTTPHandlers(ctx, commandEndpoints, checkinOpts...)
 
+	var connectEndpoint endpoint.Endpoint
+	{
+		connectEndpoint = connect.MakeConnectEndpoint(sm.connectService)
+	}
+	connectEndpoints := connect.Endpoints{
+		ConnectEndpoint: connectEndpoint,
+	}
+
+	connectHandlers := connect.MakeHTTPHandlers(ctx, connectEndpoints, checkinOpts...)
+
 	pushHandlers := nanopush.MakeHTTPHandlers(ctx, pushEndpoints, checkinOpts...)
 	scepHandler := scep.ServiceHandler(ctx, sm.scepService, httpLogger)
 	enrollHandler := enroll.ServiceHandler(ctx, sm.enrollService, httpLogger)
 	r := mux.NewRouter()
 	r.Handle("/mdm/checkin", checkinHandlers.CheckinHandler).Methods("PUT")
-	r.Handle("/mdm/enroll", enrollHandler).Methods("GET", "POST", "PUT")
+	r.Handle("/mdm/connect", connectHandlers.ConnectHandler).Methods("PUT")
+	r.Handle("/mdm/enroll", enrollHandler).Methods("GET", "POST")
 	r.Handle("/scep", scepHandler)
 	r.Handle("/push/{udid}", pushHandlers.PushHandler)
 	r.Handle("/v1/commands", commandHandlers.NewCommandHandler).Methods("POST")
@@ -268,6 +279,7 @@ type config struct {
 	PushService    *push.Service // bufford push
 	pushService    *nanopush.Push
 	checkinService checkin.Service
+	connectService connect.ConnectService
 	enrollService  enroll.Service
 	scepService    scep.Service
 	commandService command.Service
@@ -293,10 +305,18 @@ func (c *config) setupCommandQueue() {
 	if c.err != nil {
 		return
 	}
-	_, err := connect.NewQueue(c.db, c.pubclient)
+	q, err := connect.NewQueue(c.db, c.pubclient)
 	if err != nil {
 		c.err = err
+		return
 	}
+
+	connSvc, err := connect.New(q)
+	if err != nil {
+		c.err = err
+		return
+	}
+	c.connectService = connSvc
 }
 
 func (c *config) setupCheckinService() {

@@ -28,6 +28,9 @@ func NewDB(db *bolt.DB, sub pubsub.Subscriber) (*DB, error) {
 	datastore := &DB{
 		DB: db,
 	}
+	if sub == nil { // don't start the poller without pubsub.
+		return datastore, nil
+	}
 	if err := datastore.pollCheckin(sub); err != nil {
 		return nil, err
 	}
