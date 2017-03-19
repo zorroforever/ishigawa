@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"github.com/micromdm/mdm"
@@ -12,7 +15,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+const blueprintPath = `/etc/micromdm/blueprint.json`
+
 func hardcodeCommands(sm *config) error {
+	if _, err := os.Stat(blueprintPath); os.IsNotExist(err) {
+		fmt.Printf("no blueprint specified in %s, skipping default device actions\n", blueprintPath)
+		return nil
+	}
+
+	bpData, err := ioutil.ReadFile(blueprintPath)
+	if err != nil {
+		return errors.Wrap(err, "reading blueprint.json file")
+	}
+
+	var blueprint Blueprint
+	if err := json.Unmarshal(bpData, &blueprint); err != nil {
+		return errors.Wrap(err, "decoding blueprint json file")
+	}
+
 	sub := sm.pubclient
 	cmdsvc := sm.commandService
 	pushsvc := sm.pushService
@@ -31,7 +51,7 @@ func hardcodeCommands(sm *config) error {
 					fmt.Println(err)
 					continue
 				}
-				if err := hardcodeList(cmdsvc, ev.Command.UDID); err != nil {
+				if err := hardcodeList(cmdsvc, &blueprint, ev.Command.UDID); err != nil {
 					log.Println(err)
 					continue
 				}
@@ -47,42 +67,44 @@ func hardcodeCommands(sm *config) error {
 	return nil
 }
 
-func hardcodeList(svc command.Service, udid string) error {
+type Blueprint struct {
+	ApplicationsURLs []string `json:"install_application_manifest_urls"`
+	Profiles         []string `json:"install_profile_mobileconfig_paths"`
+}
+
+func hardcodeList(svc command.Service, blueprint *Blueprint, udid string) error {
 	ctx := context.Background()
-	devInfo := &mdm.CommandRequest{
-		RequestType: "DeviceInformation",
-		UDID:        udid,
-		Queries:     []string{"UDID"},
+	var requests []*mdm.CommandRequest
+	for _, appURL := range blueprint.ApplicationsURLs {
+		requests = append(requests, &mdm.CommandRequest{
+			RequestType: "InstallApplication",
+			UDID:        udid,
+			InstallApplication: mdm.InstallApplication{
+				ManifestURL:     appURL,
+				ManagementFlags: 1,
+			},
+		})
+	}
+
+	for _, profilePath := range blueprint.Profiles {
+		profilePayload, err := ioutil.ReadFile(profilePath)
+		if err != nil {
+			fmt.Printf("error reading profile %s\n, err: %s ", profilePath, err)
+		}
+		requests = append(requests, &mdm.CommandRequest{
+			RequestType: "InstallProfile",
+			UDID:        udid,
+			InstallProfile: mdm.InstallProfile{
+				Payload: profilePayload,
+			},
+		})
 	}
 
 	devConfigured := &mdm.CommandRequest{
 		RequestType: "DeviceConfigured",
 		UDID:        udid,
 	}
-
-	installProfile := &mdm.CommandRequest{
-		RequestType: "InstallProfile",
-		UDID:        udid,
-		InstallProfile: mdm.InstallProfile{
-			Payload: debugProfile,
-		},
-	}
-
-	munki := &mdm.CommandRequest{
-		RequestType: "InstallApplication",
-		UDID:        udid,
-		InstallApplication: mdm.InstallApplication{
-			ManifestURL:     "https://dev.micromdm.io/repo/munkitools-2.8.2.2855.plist",
-			ManagementFlags: 1,
-		},
-	}
-
-	var requests = []*mdm.CommandRequest{
-		devInfo,
-		installProfile,
-		munki,
-		devConfigured,
-	}
+	requests = append(requests, devConfigured)
 
 	for _, r := range requests {
 		_, err := svc.NewCommand(ctx, r)
@@ -92,89 +114,3 @@ func hardcodeList(svc command.Service, udid string) error {
 	}
 	return nil
 }
-
-var debugProfile = []byte(`<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>PayloadContent</key>
-	<array>
-		<dict>
-			<key>PayloadDisplayName</key>
-			<string>ManagedClient logging</string>
-			<key>PayloadEnabled</key>
-			<true/>
-			<key>PayloadIdentifier</key>
-			<string>com.apple.logging.ManagedClient.1</string>
-			<key>PayloadType</key>
-			<string>com.apple.system.logging</string>
-			<key>PayloadUUID</key>
-			<string>ED5DE307-A5FC-434F-AD88-187677F02222</string>
-			<key>PayloadVersion</key>
-			<integer>1</integer>
-			<key>Subsystems</key>
-			<dict>
-				<key>com.apple.ManagedClient</key>
-				<dict>
-					<key>DEFAULT-OPTIONS</key>
-					<dict>
-						<key>Default-Privacy-Setting</key>
-						<string>Public</string>
-						<key>Level</key>
-						<dict>
-							<key>Enable</key>
-							<string>debug</string>
-							<key>Persist</key>
-							<string>debug</string>
-						</dict>
-					</dict>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>PayloadDisplayName</key>
-			<string>MDM debug mode</string>
-			<key>PayloadType</key>
-			<string>com.apple.mdmclient</string>
-			<key>EnableDebug</key>
-			<true/>
-			<key>PayloadIdentifier</key>
-			<string>com.apple.logging.ManagedClient.3</string>
-			<key>PayloadUUID</key>
-			<string>3EFF8784-7AE1-43E0-A2BA-6B77BBA54341</string>
-			<key>PayloadVersion</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>PayloadDisplayName</key>
-			<string>ALR debug mode</string>
-			<key>PayloadType</key>
-			<string>com.apple.mcx.alr</string>
-			<key>EnableDebug</key>
-			<true/>
-			<key>PayloadIdentifier</key>
-			<string>com.apple.logging.ManagedClient.4</string>
-			<key>PayloadUUID</key>
-			<string>126C9C6B-AE28-4EA6-9BDB-FBB058A291B8</string>
-			<key>PayloadVersion</key>
-			<integer>1</integer>
-		</dict>
-	</array>
-	<key>PayloadDescription</key>
-	<string>Enables ManagedClient debug mode and logging</string>
-	<key>PayloadDisplayName</key>
-	<string>MCX debug mode and logging</string>
-	<key>PayloadIdentifier</key>
-	<string>com.apple.logging.ManagedClient</string>
-	<key>PayloadRemovalDisallowed</key>
-	<false/>
-	<key>PayloadScope</key>
-	<string>System</string>
-	<key>PayloadType</key>
-	<string>Configuration</string>
-	<key>PayloadUUID</key>
-	<string>D30C25BD-E0C1-44C8-830A-964F27DAD4BA</string>
-	<key>PayloadVersion</key>
-	<integer>1</integer>
-</dict>
-</plist>`)
