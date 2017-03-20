@@ -505,6 +505,7 @@ func (c *config) depClient() (dep.Client, error) {
 		if err != nil {
 			return err
 		}
+		conf = new(dep.Config)
 		conf.ConsumerSecret = token.ConsumerSecret
 		conf.ConsumerKey = token.ConsumerKey
 		conf.AccessSecret = token.AccessSecret
