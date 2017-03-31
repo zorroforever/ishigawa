@@ -54,23 +54,35 @@ const (
 
 func MarshalDevice(dev *Device) ([]byte, error) {
 	protodev := deviceproto.Device{
-		Uuid:                  dev.UUID,
-		Udid:                  dev.UDID,
-		SerialNumber:          dev.SerialNumber,
-		OsVersion:             dev.OSVersion,
-		BuildVersion:          dev.BuildVersion,
-		ProductName:           dev.ProductName,
-		Imei:                  dev.IMEI,
-		Meid:                  dev.MEID,
-		Token:                 dev.Token,
-		PushMagic:             dev.PushMagic,
-		MdmTopic:              dev.MDMTopic,
-		UnlockToken:           dev.UnlockToken,
-		Enrolled:              dev.Enrolled,
-		AwaitingConfiguration: dev.AwaitingConfiguration,
-		DeviceName:            dev.DeviceName,
-		Model:                 dev.Model,
-		ModelName:             dev.ModelName,
+		Uuid:                   dev.UUID,
+		Udid:                   dev.UDID,
+		SerialNumber:           dev.SerialNumber,
+		OsVersion:              dev.OSVersion,
+		BuildVersion:           dev.BuildVersion,
+		ProductName:            dev.ProductName,
+		Imei:                   dev.IMEI,
+		Meid:                   dev.MEID,
+		Token:                  dev.Token,
+		PushMagic:              dev.PushMagic,
+		MdmTopic:               dev.MDMTopic,
+		UnlockToken:            dev.UnlockToken,
+		Enrolled:               dev.Enrolled,
+		AwaitingConfiguration:  dev.AwaitingConfiguration,
+		DeviceName:             dev.DeviceName,
+		Model:                  dev.Model,
+		ModelName:              dev.ModelName,
+		Description:            dev.Description,
+		Color:                  dev.Color,
+		AssetTag:               dev.AssetTag,
+		DepDevice:              dev.DEPDevice,
+		DepProfileStatus:       string(dev.DEPProfileStatus),
+		DepProfileUuid:         dev.DEPProfileUUID,
+		DepProfileAssignTime:   dev.DEPProfileAssignTime.UnixNano(),
+		DepProfilePushTime:     dev.DEPProfilePushTime.UnixNano(),
+		DepProfileAssignedDate: dev.DEPProfileAssignedDate.UnixNano(),
+		DepProfileAssignedBy:   dev.DEPProfileAssignedBy,
+		LastCheckIn:            dev.LastCheckin.UnixNano(),
+		LastQueryResponse:      dev.LastQueryResponse,
 	}
 	return proto.Marshal(&protodev)
 }
@@ -97,5 +109,17 @@ func UnmarshalDevice(data []byte, dev *Device) error {
 	dev.DeviceName = pb.GetDeviceName()
 	dev.Model = pb.GetModel()
 	dev.ModelName = pb.GetModelName()
+	dev.Description = pb.GetDescription()
+	dev.Color = pb.GetColor()
+	dev.AssetTag = pb.GetAssetTag()
+	dev.DEPDevice = pb.GetDepDevice()
+	dev.DEPProfileStatus = DEPProfileStatus(pb.GetDepProfileStatus())
+	dev.DEPProfileUUID = pb.GetDepProfileUuid()
+	dev.DEPProfileAssignTime = time.Unix(0, pb.GetDepProfileAssignTime()).UTC()
+	dev.DEPProfilePushTime = time.Unix(0, pb.GetDepProfilePushTime()).UTC()
+	dev.DEPProfileAssignedDate = time.Unix(0, pb.GetDepProfileAssignedDate()).UTC()
+	dev.DEPProfileAssignedBy = pb.GetDepProfileAssignedBy()
+	dev.LastCheckin = time.Unix(0, pb.GetLastCheckIn()).UTC()
+	dev.LastQueryResponse = pb.GetLastQueryResponse()
 	return nil
 }
