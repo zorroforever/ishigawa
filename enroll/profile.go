@@ -77,3 +77,9 @@ type MDMPayloadContent struct {
 	ServerURL               string
 	Topic                   string
 }
+
+type ProfileServicePayload struct {
+	URL              string
+	Challenge        string `plist:",omitempty"`
+	DeviceAttributes []string
+}

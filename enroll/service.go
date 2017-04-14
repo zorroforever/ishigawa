@@ -1,6 +1,7 @@
 package enroll
 
 import (
+	"crypto/x509"
 	"golang.org/x/net/context"
 	"io/ioutil"
 	"strings"
@@ -8,6 +9,9 @@ import (
 
 type Service interface {
 	Enroll(ctx context.Context) (Profile, error)
+	OTAEnroll(ctx context.Context) (Payload, error)
+	OTAPhase2(ctx context.Context) (Profile, error)
+	OTAPhase3(ctx context.Context) (Profile, error)
 }
 
 func NewService(pushTopic, caCertPath, scepURL, scepChallenge, url, tlsCertPath, scepSubject string) (Service, error) {
@@ -144,4 +148,65 @@ func (svc service) Enroll(ctx context.Context) (Profile, error) {
 	profile.PayloadContent = payloadContent
 
 	return *profile, nil
+}
+
+// OTAEnroll returns an Over-the-Air "Profile Service" Payload for enrollment.
+func (svc service) OTAEnroll(ctx context.Context) (Payload, error) {
+	payload := NewPayload("Profile Service")
+	payload.PayloadIdentifier = "com.github.micromdm.ota.profile-service"
+	payload.PayloadDisplayName = "MicroMDM Profile Service"
+	payload.PayloadDescription = "Profile Service enrollment"
+	payload.PayloadOrganization = "MicroMDM"
+	payload.PayloadContent = ProfileServicePayload{
+		URL:              svc.URL + "/ota/phase23",
+		Challenge:        "",
+		DeviceAttributes: []string{"UDID", "VERSION", "PRODUCT", "SERIAL", "MEID", "IMEI"},
+	}
+
+	// yes, this is a bare Payload, not a Profile
+	return *payload, nil
+}
+
+// OTAPhase2 returns a SCEP Profile for use in phase 2 of Over-the-Air enrollment.
+func (svc service) OTAPhase2(ctx context.Context) (Profile, error) {
+	profile := NewProfile()
+	profile.PayloadIdentifier = "com.github.micromdm.micromdm.ota-scep"
+	profile.PayloadOrganization = "MicroMDM"
+	profile.PayloadDisplayName = "Enrollment Profile"
+	profile.PayloadDescription = "The server may alter your settings"
+	profile.PayloadScope = "System"
+
+	scepContent := SCEPPayloadContent{
+		URL:      svc.SCEPURL,
+		Keysize:  1024,
+		KeyType:  "RSA",
+		KeyUsage: int(x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment),
+		Name:     "Device Management Identity Certificate",
+		Subject:  svc.SCEPSubject,
+	}
+
+	if svc.SCEPChallenge != "" {
+		scepContent.Challenge = svc.SCEPChallenge
+	}
+
+	scepPayload := NewPayload("com.apple.security.scep")
+	scepPayload.PayloadDescription = "Configures SCEP"
+	scepPayload.PayloadDisplayName = "SCEP"
+	scepPayload.PayloadIdentifier = "com.github.micromdm.scep"
+	scepPayload.PayloadOrganization = "MicroMDM"
+	scepPayload.PayloadContent = scepContent
+	scepPayload.PayloadScope = "System"
+
+	profile.PayloadContent = append(profile.PayloadContent, *scepPayload)
+
+	return *profile, nil
+}
+
+// OTAPhase3 returns a Profile for use in phase 3 of Over-the-Air profile enrollment.
+// This would typically be the final or end profile of the Over-the-Air
+// enrollment process. In our case this would probably be a device-specifc
+// MDM enrollment payload.
+// TODO: Not implemented.
+func (svc service) OTAPhase3(ctx context.Context) (Profile, error) {
+	return Profile{}, nil
 }
