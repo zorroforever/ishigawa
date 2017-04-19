@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -42,6 +45,8 @@ func (cmd *applyCommand) Run(args []string) error {
 	switch strings.ToLower(args[0]) {
 	case "blueprints":
 		run = cmd.applyBlueprint
+	case "dep-tokens":
+		run = cmd.applyDEPTokens
 	default:
 		cmd.Usage()
 		os.Exit(1)
@@ -56,6 +61,7 @@ Apply a resource.
 Valid resource types:
 
   * blueprints
+  * dep-tokens
 
 Examples:
   # Get a list of devices
@@ -72,5 +78,33 @@ func (cmd *applyCommand) applyBlueprint(args []string) error {
 	if err := flagset.Parse(args); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (cmd *applyCommand) applyDEPTokens(args []string) error {
+	flagset := flag.NewFlagSet("dep-tokens", flag.ExitOnError)
+	var (
+		flPublicKeyPath = flagset.String("import-token", "", "filename of p7m encrypted token file (downloaded from DEP portal)")
+	)
+	flagset.Usage = usageFor(flagset, "mdmctl apply dep-tokens [flags]")
+	if err := flagset.Parse(args); err != nil {
+		return err
+	}
+	if *flPublicKeyPath == "" {
+		return errors.New("must provide -import-token parameter")
+	}
+	if _, err := os.Stat(*flPublicKeyPath); os.IsNotExist(err) {
+		return err
+	}
+	p7mBytes, err := ioutil.ReadFile(*flPublicKeyPath)
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	err = cmd.applysvc.ApplyDEPToken(ctx, p7mBytes)
+	if err != nil {
+		return err
+	}
+	fmt.Println("imported DEP token")
 	return nil
 }

@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"flag"
 	"fmt"
@@ -193,7 +192,7 @@ func serve(args []string) error {
 
 	var listsvc list.Service
 	{
-		listsvc = &list.ListService{Devices: devDB}
+		listsvc = &list.ListService{Devices: devDB, DB: sm.db}
 	}
 	var listDevicesEndpoint endpoint.Endpoint
 	{
@@ -201,12 +200,13 @@ func serve(args []string) error {
 
 	}
 	listEndpoints := list.Endpoints{
-		ListDevicesEndpoint: listDevicesEndpoint,
+		ListDevicesEndpoint:  listDevicesEndpoint,
+		GetDEPTokensEndpoint: list.MakeGetDEPTokensEndpoint(listsvc),
 	}
 
 	var applysvc apply.Service
 	{
-		applysvc = &apply.ApplyService{Blueprints: bpDB}
+		applysvc = &apply.ApplyService{Blueprints: bpDB, DB: sm.db}
 	}
 
 	var applyBlueprintEndpoint endpoint.Endpoint
@@ -216,6 +216,7 @@ func serve(args []string) error {
 
 	applyEndpoints := apply.Endpoints{
 		ApplyBlueprintEndpoint: applyBlueprintEndpoint,
+		ApplyDEPTokensEndpoint: apply.MakeApplyDEPTokensEndpoint(applysvc),
 	}
 
 	applyAPIHandlers := apply.MakeHTTPHandlers(ctx, applyEndpoints, connectOpts...)
@@ -242,8 +243,10 @@ func serve(args []string) error {
 
 	// API commands. Only handled if the user provides an api key.
 	if *flAPIKey != "" {
-		r.Handle("/v1/devices", apiAuthMiddleware(*flAPIKey, listAPIHandlers)).Methods("GET")
-		r.Handle("/v1/blueprints", apiAuthMiddleware(*flAPIKey, applyAPIHandlers)).Methods("PUT")
+		r.Handle("/v1/devices", apiAuthMiddleware(*flAPIKey, listAPIHandlers.ListDevicesHandler)).Methods("GET")
+		r.Handle("/v1/dep-tokens", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPTokensHandler)).Methods("GET")
+		r.Handle("/v1/dep-tokens", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.DEPTokensHandler)).Methods("PUT")
+		r.Handle("/v1/blueprints", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.BlueprintHandler)).Methods("PUT")
 	}
 
 	if *flRepoPath != "" {
@@ -601,6 +604,22 @@ func (c *config) depClient() (dep.Client, error) {
 	// depsim config
 	depsim := c.depsim
 	var conf *dep.Config
+
+	// try getting the oauth config from bolt
+	tokens, err := list.GetDEPTokens(c.db)
+	if err != nil {
+		return nil, err
+	}
+	if len(tokens) >= 1 {
+		conf = new(dep.Config)
+		conf.ConsumerSecret = tokens[0].ConsumerSecret
+		conf.ConsumerKey = tokens[0].ConsumerKey
+		conf.AccessSecret = tokens[0].AccessSecret
+		conf.AccessToken = tokens[0].AccessToken
+		// TODO: handle expiration
+	}
+
+	// override with depsim keys if specified on CLI
 	if depsim {
 		conf = &dep.Config{
 			ConsumerKey:    "CK_48dd68d198350f51258e885ce9a5c37ab7f98543c4a697323d75682a6c10a32501cb247e3db08105db868f73f2c972bdb6ae77112aea803b9219eb52689d42e6",
@@ -610,40 +629,13 @@ func (c *config) depClient() (dep.Client, error) {
 		}
 	}
 
-	// try getting the oauth config from bolt
-
-	err := c.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(depTokenBucket))
-		if b == nil {
-			return nil
-		}
-		_, v := b.Cursor().First()
-		if v == nil {
-			return nil
-		}
-		var token DEPTokenJSON
-		err := json.Unmarshal(v, &token)
-		if err != nil {
-			return err
-		}
-		conf = new(dep.Config)
-		conf.ConsumerSecret = token.ConsumerSecret
-		conf.ConsumerKey = token.ConsumerKey
-		conf.AccessSecret = token.AccessSecret
-		conf.AccessToken = token.AccessToken
-		// TODO handle expiration.
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	if conf == nil {
 		return nil, nil
 	}
 
 	depServerURL := "https://mdmenrollment.apple.com"
 	if depsim {
+		// TODO: support supplied depsim URL
 		depServerURL = "http://dep.micromdm.io:9000"
 	}
 	client, err := dep.NewClient(conf, dep.ServerURL(depServerURL))
