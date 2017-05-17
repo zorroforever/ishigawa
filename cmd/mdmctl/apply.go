@@ -14,6 +14,7 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/micromdm/micromdm/blueprint"
 	"github.com/micromdm/micromdm/core/apply"
+	"github.com/micromdm/micromdm/profile"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -51,6 +52,8 @@ func (cmd *applyCommand) Run(args []string) error {
 		run = cmd.applyBlueprint
 	case "dep-tokens":
 		run = cmd.applyDEPTokens
+	case "profiles":
+		run = cmd.applyProfile
 	default:
 		cmd.Usage()
 		os.Exit(1)
@@ -65,6 +68,7 @@ Apply a resource.
 Valid resource types:
 
   * blueprints
+  * profiles
   * dep-tokens
 
 Examples:
@@ -160,5 +164,44 @@ func (cmd *applyCommand) applyDEPTokens(args []string) error {
 		return err
 	}
 	fmt.Println("imported DEP token")
+	return nil
+}
+
+func (cmd *applyCommand) applyProfile(args []string) error {
+	flagset := flag.NewFlagSet("profiles", flag.ExitOnError)
+	var (
+		flProfilePath = flagset.String("f", "", "filename of profile to apply")
+	)
+	flagset.Usage = usageFor(flagset, "mdmctl apply profiles [flags]")
+	if err := flagset.Parse(args); err != nil {
+		return err
+	}
+	if *flProfilePath == "" {
+		return errors.New("must provide -f parameter")
+	}
+	if _, err := os.Stat(*flProfilePath); os.IsNotExist(err) {
+		return err
+	}
+	profileBytes, err := ioutil.ReadFile(*flProfilePath)
+	if err != nil {
+		return err
+	}
+
+	// TODO: to consider just uploading the Mobileconfig data (without a
+	// Profile struct and doing init server side)
+	var p profile.Profile
+	p.Mobileconfig = profileBytes
+	p.Identifier, err = p.Mobileconfig.GetPayloadIdentifier()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	err = cmd.applysvc.ApplyProfile(ctx, &p)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("applied blueprint id %s from %s", p.Identifier, *flProfilePath))
 	return nil
 }
