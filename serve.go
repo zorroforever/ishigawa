@@ -147,13 +147,17 @@ func serve(args []string) error {
 		stdlog.Fatal(err)
 	}
 
-	bpDB, err := blueprint.NewDB(sm.db)
+	profDB, err := profile.NewDB(sm.db)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
 
-	profDB, err := profile.NewDB(sm.db)
+	bpDB, err := blueprint.NewDB(sm.db, profDB)
 	if err != nil {
+		stdlog.Fatal(err)
+	}
+
+	if err := bpDB.StartListener(sm.pubclient, sm.commandService); err != nil {
 		stdlog.Fatal(err)
 	}
 
