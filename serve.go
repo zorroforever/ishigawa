@@ -210,9 +210,13 @@ func serve(args []string) error {
 		ConnectEndpoint: connectEndpoint,
 	}
 
+	dc, err := sm.depClient()
+	if err != nil {
+		stdlog.Fatalf("creating DEP client %s\n", err)
+	}
 	var listsvc list.Service
 	{
-		listsvc = &list.ListService{Devices: devDB, DB: sm.db, Blueprints: bpDB, Profiles: profDB}
+		listsvc = &list.ListService{DEPClient: dc, Devices: devDB, DB: sm.db, Blueprints: bpDB, Profiles: profDB}
 	}
 	var listDevicesEndpoint endpoint.Endpoint
 	{
@@ -220,15 +224,18 @@ func serve(args []string) error {
 
 	}
 	listEndpoints := list.Endpoints{
-		ListDevicesEndpoint:   listDevicesEndpoint,
-		GetDEPTokensEndpoint:  list.MakeGetDEPTokensEndpoint(listsvc),
-		GetBlueprintsEndpoint: list.MakeGetBlueprintsEndpoint(listsvc),
-		GetProfilesEndpoint:   list.MakeGetProfilesEndpoint(listsvc),
+		ListDevicesEndpoint:       listDevicesEndpoint,
+		GetDEPTokensEndpoint:      list.MakeGetDEPTokensEndpoint(listsvc),
+		GetBlueprintsEndpoint:     list.MakeGetBlueprintsEndpoint(listsvc),
+		GetProfilesEndpoint:       list.MakeGetProfilesEndpoint(listsvc),
+		GetDEPAccountInfoEndpoint: list.MakeGetDEPAccountInfoEndpoint(listsvc),
+		GetDEPProfileEndpoint:     list.MakeGetDEPProfileEndpoint(listsvc),
+		GetDEPDeviceEndpoint:      list.MakeGetDEPDeviceDetailsEndpoint(listsvc),
 	}
 
 	var applysvc apply.Service
 	{
-		applysvc = &apply.ApplyService{Blueprints: bpDB, DB: sm.db, Profiles: profDB}
+		applysvc = &apply.ApplyService{DEPClient: dc, Blueprints: bpDB, DB: sm.db, Profiles: profDB}
 	}
 
 	var applyBlueprintEndpoint endpoint.Endpoint
@@ -241,10 +248,16 @@ func serve(args []string) error {
 		applyProfileEndpoint = apply.MakeApplyProfileEndpoint(applysvc)
 	}
 
+	var defineDEPProfileEndpoint endpoint.Endpoint
+	{
+		defineDEPProfileEndpoint = apply.MakeDefineDEPProfile(applysvc)
+	}
+
 	applyEndpoints := apply.Endpoints{
-		ApplyBlueprintEndpoint: applyBlueprintEndpoint,
-		ApplyDEPTokensEndpoint: apply.MakeApplyDEPTokensEndpoint(applysvc),
-		ApplyProfileEndpoint:   applyProfileEndpoint,
+		ApplyBlueprintEndpoint:   applyBlueprintEndpoint,
+		ApplyDEPTokensEndpoint:   apply.MakeApplyDEPTokensEndpoint(applysvc),
+		ApplyProfileEndpoint:     applyProfileEndpoint,
+		DefineDEPProfileEndpoint: defineDEPProfileEndpoint,
 	}
 
 	applyAPIHandlers := apply.MakeHTTPHandlers(ctx, applyEndpoints, connectOpts...)
@@ -278,6 +291,10 @@ func serve(args []string) error {
 		r.Handle("/v1/blueprints", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.BlueprintHandler)).Methods("PUT")
 		r.Handle("/v1/profiles", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetProfilesHandler)).Methods("GET")
 		r.Handle("/v1/profiles", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.ProfileHandler)).Methods("PUT")
+		r.Handle("/v1/dep/devices", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPDeviceDetailsHandler)).Methods("GET")
+		r.Handle("/v1/dep/account", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPAccountInfoHandler)).Methods("GET")
+		r.Handle("/v1/dep/profiles", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPProfileHander)).Methods("GET")
+		r.Handle("/v1/dep/profiles", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.DefineDEPProfileHandler)).Methods("POST")
 	}
 
 	if *flRepoPath != "" {
@@ -315,7 +332,8 @@ func serve(args []string) error {
 		sig := make(chan os.Signal)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		<-sig // block on signal then gracefully shutdown.
-		ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 		errs <- srv.Shutdown(ctx)
 	}()
 
