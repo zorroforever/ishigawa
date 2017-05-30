@@ -1,13 +1,16 @@
 package depsync
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/micromdm/dep"
+	"github.com/micromdm/micromdm/deptoken"
 	"github.com/micromdm/micromdm/pubsub"
 	"github.com/pkg/errors"
 )
@@ -22,9 +25,12 @@ type Syncer interface {
 }
 
 type watcher struct {
-	client    dep.Client
+	mtx    sync.RWMutex
+	client dep.Client
+
 	publisher pubsub.Publisher
 	conf      *config
+	startSync chan bool
 }
 
 type cursor struct {
@@ -41,7 +47,15 @@ func (c cursor) Valid() bool {
 	return true
 }
 
-func New(client dep.Client, pub pubsub.Publisher, db *bolt.DB) (Syncer, error) {
+type Option func(*watcher)
+
+func WithClient(client dep.Client) Option {
+	return func(w *watcher) {
+		w.client = client
+	}
+}
+
+func New(pub pubsub.PublishSubscriber, db *bolt.DB, opts ...Option) (Syncer, error) {
 	conf, err := LoadConfig(db)
 	if err != nil {
 		return nil, err
@@ -51,10 +65,19 @@ func New(client dep.Client, pub pubsub.Publisher, db *bolt.DB) (Syncer, error) {
 	} else {
 		conf.Cursor.Value = ""
 	}
+
 	sync := &watcher{
 		publisher: pub,
-		client:    client,
 		conf:      conf,
+		startSync: make(chan bool),
+	}
+
+	for _, opt := range opts {
+		opt(sync)
+	}
+
+	if err := sync.updateClient(pub); err != nil {
+		return nil, err
 	}
 
 	saveCursor := func() {
@@ -67,11 +90,48 @@ func New(client dep.Client, pub pubsub.Publisher, db *bolt.DB) (Syncer, error) {
 
 	go func() {
 		defer saveCursor()
+		if sync.client == nil {
+			// block until we have a DEP client to start sync process
+			log.Println("depsync: waiting for DEP token to be added before starting sync")
+			<-sync.startSync
+		}
 		if err := sync.Run(); err != nil {
 			log.Println("DEP watcher failed: ", err)
 		}
 	}()
 	return sync, nil
+}
+
+func (w *watcher) updateClient(pubsub pubsub.Subscriber) error {
+	tokenAdded, err := pubsub.Subscribe("token-events", deptoken.DEPTokenTopic)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case event := <-tokenAdded:
+				var token deptoken.DEPToken
+				if err := json.Unmarshal(event.Message, &token); err != nil {
+					log.Printf("unmarshalling tokenAdded to token: %s\n", err)
+					continue
+				}
+
+				client, err := token.Client()
+				if err != nil {
+					log.Printf("creating new DEP client: %s\n", err)
+					continue
+				}
+
+				w.mtx.Lock()
+				w.client = client
+				w.mtx.Unlock()
+				go func() { w.startSync <- true }() // unblock Run
+			}
+		}
+	}()
+	return nil
 }
 
 // TODO this is private temporarily until the interface can be defined

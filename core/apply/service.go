@@ -2,7 +2,8 @@ package apply
 
 import (
 	"context"
-	"fmt"
+	"log"
+	"sync"
 
 	"bufio"
 	"bytes"
@@ -13,11 +14,11 @@ import (
 
 	"github.com/fullsailor/pkcs7"
 
-	"github.com/boltdb/bolt"
 	"github.com/micromdm/dep"
 	"github.com/micromdm/micromdm/blueprint"
-	"github.com/micromdm/micromdm/core/list"
+	"github.com/micromdm/micromdm/deptoken"
 	"github.com/micromdm/micromdm/profile"
+	"github.com/micromdm/micromdm/pubsub"
 )
 
 type Service interface {
@@ -28,10 +29,44 @@ type Service interface {
 }
 
 type ApplyService struct {
-	DEPClient  dep.Client
+	mtx       sync.RWMutex
+	DEPClient dep.Client
+
 	Blueprints *blueprint.DB
 	Profiles   *profile.DB
-	DB         *bolt.DB // TODO: replace with reference to DEP token svc/pkg
+	Tokens     *deptoken.DB
+}
+
+func (svc *ApplyService) WatchTokenUpdates(pubsub pubsub.Subscriber) error {
+	tokenAdded, err := pubsub.Subscribe("apply-token-events", deptoken.DEPTokenTopic)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case event := <-tokenAdded:
+				var token deptoken.DEPToken
+				if err := json.Unmarshal(event.Message, &token); err != nil {
+					log.Printf("unmarshalling tokenAdded to token: %s\n", err)
+					continue
+				}
+
+				client, err := token.Client()
+				if err != nil {
+					log.Printf("creating new DEP client: %s\n", err)
+					continue
+				}
+
+				svc.mtx.Lock()
+				svc.DEPClient = client
+				svc.mtx.Unlock()
+			}
+		}
+	}()
+
+	return nil
 }
 
 func (svc *ApplyService) ApplyBlueprint(ctx context.Context, bp *blueprint.Blueprint) error {
@@ -73,28 +108,12 @@ func unwrapTokenJSON(wrapped []byte) ([]byte, error) {
 	return tokenJSON.Bytes(), nil
 }
 
-// TODO: move into seperate svc/pkg
-const (
-	depTokenBucket = "mdm.DEPToken"
-)
-
-func PutDEPToken(db *bolt.DB, consumerKey string, json []byte) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(depTokenBucket))
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte(consumerKey), json)
-	})
-	return err
-}
-
 func (svc *ApplyService) ApplyDEPToken(ctx context.Context, P7MContent []byte) error {
 	unwrapped, err := unwrapSMIME(P7MContent)
 	if err != nil {
 		return err
 	}
-	key, cert, err := list.GetDEPKeypair(svc.DB)
+	key, cert, err := svc.Tokens.DEPKeypair()
 	if err != nil {
 		return err
 	}
@@ -110,16 +129,16 @@ func (svc *ApplyService) ApplyDEPToken(ctx context.Context, P7MContent []byte) e
 	if err != nil {
 		return err
 	}
-	var depToken list.DEPToken
+	var depToken deptoken.DEPToken
 	err = json.Unmarshal(tokenJSON, &depToken)
 	if err != nil {
 		return err
 	}
-	err = PutDEPToken(svc.DB, depToken.ConsumerKey, tokenJSON)
+	err = svc.Tokens.AddToken(depToken.ConsumerKey, tokenJSON)
 	if err != nil {
 		return err
 	}
-	fmt.Println("stored DEP token with ck", depToken.ConsumerKey)
+	log.Println("stored DEP token with ck", depToken.ConsumerKey)
 	return nil
 }
 

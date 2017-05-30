@@ -48,6 +48,7 @@ import (
 	"github.com/micromdm/micromdm/core/list"
 	"github.com/micromdm/micromdm/crypto"
 	"github.com/micromdm/micromdm/depsync"
+	"github.com/micromdm/micromdm/deptoken"
 	"github.com/micromdm/micromdm/device"
 	"github.com/micromdm/micromdm/enroll"
 	"github.com/micromdm/micromdm/profile"
@@ -210,9 +211,15 @@ func serve(args []string) error {
 	if err != nil {
 		stdlog.Fatalf("creating DEP client %s\n", err)
 	}
+	tokenDB := &deptoken.DB{DB: sm.db, Publisher: sm.pubclient}
 	var listsvc list.Service
 	{
-		listsvc = &list.ListService{DEPClient: dc, Devices: devDB, DB: sm.db, Blueprints: bpDB, Profiles: profDB}
+		l := &list.ListService{DEPClient: dc, Devices: devDB, Tokens: tokenDB, Blueprints: bpDB, Profiles: profDB}
+		listsvc = l
+
+		if err := l.WatchTokenUpdates(sm.pubclient); err != nil {
+			stdlog.Fatal(err)
+		}
 	}
 	var listDevicesEndpoint endpoint.Endpoint
 	{
@@ -231,7 +238,11 @@ func serve(args []string) error {
 
 	var applysvc apply.Service
 	{
-		applysvc = &apply.ApplyService{DEPClient: dc, Blueprints: bpDB, DB: sm.db, Profiles: profDB}
+		l := &apply.ApplyService{DEPClient: dc, Blueprints: bpDB, Tokens: tokenDB, Profiles: profDB}
+		applysvc = l
+		if err := l.WatchTokenUpdates(sm.pubclient); err != nil {
+			stdlog.Fatal(err)
+		}
 	}
 
 	var applyBlueprintEndpoint endpoint.Endpoint
@@ -651,8 +662,9 @@ func (c *config) depClient() (dep.Client, error) {
 	depsim := c.depsim
 	var conf *dep.Config
 
+	tokenDB := &deptoken.DB{DB: c.db}
 	// try getting the oauth config from bolt
-	tokens, err := list.GetDEPTokens(c.db)
+	tokens, err := tokenDB.DEPTokens()
 	if err != nil {
 		return nil, err
 	}
@@ -702,12 +714,11 @@ func (c *config) setupDEPSync() {
 		c.err = err
 		return
 	}
-	if client == nil {
-		fmt.Println("no DEP server configured. skipping device sync from DEP.")
-		return
+	var opts []depsync.Option
+	if client != nil {
+		opts = append(opts, depsync.WithClient(client))
 	}
-
-	_, c.err = depsync.New(client, c.pubclient, c.db)
+	_, c.err = depsync.New(c.pubclient, c.db, opts...)
 	if err != nil {
 		return
 	}
