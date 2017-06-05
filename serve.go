@@ -40,6 +40,7 @@ import (
 	boltdepot "github.com/micromdm/scep/depot/bolt"
 	scep "github.com/micromdm/scep/server"
 
+	"github.com/micromdm/micromdm/appstore"
 	"github.com/micromdm/micromdm/blueprint"
 	"github.com/micromdm/micromdm/checkin"
 	"github.com/micromdm/micromdm/command"
@@ -213,9 +214,17 @@ func serve(args []string) error {
 		stdlog.Fatalf("creating DEP client %s\n", err)
 	}
 	tokenDB := &deptoken.DB{DB: sm.db, Publisher: sm.pubclient}
+	appDB := &appstore.Repo{Path: *flRepoPath}
 	var listsvc list.Service
 	{
-		l := &list.ListService{DEPClient: dc, Devices: devDB, Tokens: tokenDB, Blueprints: bpDB, Profiles: profDB}
+		l := &list.ListService{
+			DEPClient:  dc,
+			Devices:    devDB,
+			Tokens:     tokenDB,
+			Blueprints: bpDB,
+			Profiles:   profDB,
+			Apps:       appDB,
+		}
 		listsvc = l
 
 		if err := l.WatchTokenUpdates(sm.pubclient); err != nil {
@@ -235,11 +244,18 @@ func serve(args []string) error {
 		GetDEPAccountInfoEndpoint: list.MakeGetDEPAccountInfoEndpoint(listsvc),
 		GetDEPProfileEndpoint:     list.MakeGetDEPProfileEndpoint(listsvc),
 		GetDEPDeviceEndpoint:      list.MakeGetDEPDeviceDetailsEndpoint(listsvc),
+		ListAppsEndpont:           list.MakeListAppsEndpoint(listsvc),
 	}
 
 	var applysvc apply.Service
 	{
-		l := &apply.ApplyService{DEPClient: dc, Blueprints: bpDB, Tokens: tokenDB, Profiles: profDB}
+		l := &apply.ApplyService{
+			DEPClient:  dc,
+			Blueprints: bpDB,
+			Tokens:     tokenDB,
+			Profiles:   profDB,
+			Apps:       appDB,
+		}
 		applysvc = l
 		if err := l.WatchTokenUpdates(sm.pubclient); err != nil {
 			stdlog.Fatal(err)
@@ -261,11 +277,17 @@ func serve(args []string) error {
 		defineDEPProfileEndpoint = apply.MakeDefineDEPProfile(applysvc)
 	}
 
+	var appUploadEndpoint endpoint.Endpoint
+	{
+		appUploadEndpoint = apply.MakeUploadAppEndpiont(applysvc)
+	}
+
 	applyEndpoints := apply.Endpoints{
 		ApplyBlueprintEndpoint:   applyBlueprintEndpoint,
 		ApplyDEPTokensEndpoint:   apply.MakeApplyDEPTokensEndpoint(applysvc),
 		ApplyProfileEndpoint:     applyProfileEndpoint,
 		DefineDEPProfileEndpoint: defineDEPProfileEndpoint,
+		AppUploadEndpoint:        appUploadEndpoint,
 	}
 
 	applyAPIHandlers := apply.MakeHTTPHandlers(ctx, applyEndpoints, connectOpts...)
@@ -306,8 +328,10 @@ func serve(args []string) error {
 		r.Handle("/v1/profiles", apiAuthMiddleware(*flAPIKey, removeAPIHandlers.ProfileHandler)).Methods("DELETE")
 		r.Handle("/v1/dep/devices", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPDeviceDetailsHandler)).Methods("GET")
 		r.Handle("/v1/dep/account", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPAccountInfoHandler)).Methods("GET")
-		r.Handle("/v1/dep/profiles", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPProfileHander)).Methods("GET")
+		r.Handle("/v1/dep/profiles", apiAuthMiddleware(*flAPIKey, listAPIHandlers.GetDEPProfileHandler)).Methods("GET")
 		r.Handle("/v1/dep/profiles", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.DefineDEPProfileHandler)).Methods("POST")
+		r.Handle("/v1/apps", apiAuthMiddleware(*flAPIKey, applyAPIHandlers.AppUploadHandler)).Methods("POST")
+		r.Handle("/v1/apps", apiAuthMiddleware(*flAPIKey, listAPIHandlers.ListAppsHandler)).Methods("GET")
 	}
 
 	if *flRepoPath != "" {

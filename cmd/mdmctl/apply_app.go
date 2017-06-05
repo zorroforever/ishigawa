@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/zlib"
+	"context"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -29,6 +30,7 @@ func (cmd *applyCommand) applyApp(args []string) error {
 
 		flHashSize = flagset.Int64("md5size", appmanifest.DefaultMD5Size, "md5 hash size in bytes (optional)")
 		flSign     = flagset.String("sign", "", "sign package before importing, requires specifying a product ID (optional)")
+		flUpload   = flagset.Bool("upload", false, "upload package and/or manifest to micromdm repository.")
 	)
 	flagset.Usage = usageFor(flagset, "mdmctl apply app [flags]")
 	if err := flagset.Parse(args); err != nil {
@@ -98,6 +100,13 @@ Please rebuild the package and re-run the command.
 		return err
 	}
 
+	if *flUpload {
+		err := cmd.applysvc.UploadApp(context.TODO(), nameMannifest(f.Name()), &buf, filepath.Base(f.Name()), f)
+		if err != nil {
+			return err
+		}
+	}
+
 	switch *flAppManifest {
 	case "":
 	case "-":
@@ -108,6 +117,11 @@ Please rebuild the package and re-run the command.
 	}
 
 	return nil
+}
+
+func nameMannifest(pkgName string) string {
+	trimmed := strings.TrimSuffix(filepath.Base(pkgName), filepath.Ext(pkgName))
+	return trimmed + ".plist"
 }
 
 func checkDistribution(pkgPath string) (bool, error) {
@@ -147,16 +161,20 @@ func checkDistribution(pkgPath string) (bool, error) {
 }
 
 func (cmd *applyCommand) serverRepoURL() (string, error) {
-	serverURL, err := url.Parse(cmd.config.ServerURL)
+	return repoURL(cmd.config.ServerURL)
+}
+
+func pkgURL(repoURL, pkgPath string) string {
+	return path.Join(repoURL, filepath.Base(pkgPath))
+}
+
+func repoURL(server string) (string, error) {
+	serverURL, err := url.Parse(server)
 	if err != nil {
 		return "", err
 	}
 	serverURL.Path = "/repo"
 	return serverURL.String(), nil
-}
-
-func pkgURL(repoURL, pkgPath string) string {
-	return path.Join(repoURL, filepath.Base(pkgPath))
 }
 
 // replaces .pkg with .plist

@@ -63,6 +63,8 @@ func (cmd *getCommand) Run(args []string) error {
 		run = cmd.getBlueprints
 	case "profiles":
 		run = cmd.getProfiles
+	case "apps":
+		run = cmd.getApps
 	default:
 		cmd.Usage()
 		os.Exit(1)
@@ -84,6 +86,7 @@ Valid resource types:
   * dep-account
   * dep-profiles
   * profiles
+  * apps
 
 Examples:
   # Get a list of devices
