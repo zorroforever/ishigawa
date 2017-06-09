@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/garyburd/go-oauth"
   packages = ["oauth"]
-  revision = "4f191fd0442e75c0c73bd00e4f5f27d4c08312ee"
+  revision = "d9dbc37b1a7acf4923050e614fc7861e3fbf42f9"
 
 [[projects]]
   name = "github.com/go-kit/kit"
@@ -95,7 +95,7 @@
   branch = "master"
   name = "github.com/micromdm/mdm"
   packages = ["."]
-  revision = "87f1acab9ba9bccb5b407b935c231140b710125a"
+  revision = "1b8ad711b42f5510344c657a195d7eede8479728"
 
 [[projects]]
   name = "github.com/micromdm/scep"
@@ -119,31 +119,31 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert","pkcs12","pkcs12/internal/rc2"]
-  revision = "e1a4589e7d3ea14a3352255d04b6f1a418845e5e"
+  revision = "e7ba82683099cae71475961448ab8f903ea77c26"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","http2","http2/hpack","idna","lex/httplex"]
-  revision = "3da985ce5951d99de868be4385f21ea6c2b22f24"
+  revision = "59a0b19b5533c7977ddeb86b017bf507ed407b12"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "b90f89a1e7a9c1f6b918820b3daa7f08488c8594"
+  revision = "0b25a408a50076fbbcae6b7ac0ea5fbb0b085e79"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["internal/gen","internal/triegen","internal/ucd","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
-  revision = "4ee4af566555f5fbe026368b75596286a312663a"
+  revision = "eae24e7440a7aee8476ea69a0c574eafb42f5839"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","imports"]
-  revision = "bc6db94186c03835daa5c1c679fba599dc1f3b79"
+  revision = "e4933889654a3d0cd7f3ab2ae7511ce0199b4994"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -23,6 +23,7 @@ message Command {
     ScheduleOSUpdate schedule_os_update = 6;
     ScheduleOSUpdateScan schedule_os_update_scan = 7;
     RemoveProfile remove_profile = 8;
+    DeleteUser delete_user = 9;
 }
 
 message ScheduleOSUpdate {
@@ -61,6 +62,11 @@ message InstallProfile {
 
 message RemoveProfile {
     string identifier = 1;
+}
+
+message DeleteUser {
+    string username = 1;
+    bool force_deletion = 2;
 }
 
 

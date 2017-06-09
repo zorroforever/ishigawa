@@ -39,6 +39,11 @@ func MarshalEvent(e *Event) ([]byte, error) {
 		}
 	}
 	switch e.Payload.Command.RequestType {
+	case "DeleteUser":
+		payload.Command.DeleteUser = &commandproto.DeleteUser{
+			Username:      e.Payload.Command.DeleteUser.UserName,
+			ForceDeletion: e.Payload.Command.DeleteUser.ForceDeletion,
+		}
 	case "ScheduleOSUpdateScan":
 		payload.Command.ScheduleOsUpdateScan = &commandproto.ScheduleOSUpdateScan{
 			Force: e.Payload.Command.ScheduleOSUpdateScan.Force,
@@ -124,6 +129,12 @@ func UnmarshalEvent(data []byte, e *Event) error {
 		RequestType: pb.Payload.Command.RequestType,
 	}
 	switch pb.Payload.Command.RequestType {
+	case "DeleteUser":
+		cmd := pb.Payload.Command.GetDeleteUser()
+		e.Payload.Command.DeleteUser = mdm.DeleteUser{
+			UserName:      cmd.GetUsername(),
+			ForceDeletion: cmd.GetForceDeletion(),
+		}
 	case "ScheduleOSUpdateScan":
 		cmd := pb.Payload.Command.GetScheduleOsUpdateScan()
 		e.Payload.Command.ScheduleOSUpdateScan = mdm.ScheduleOSUpdateScan{
