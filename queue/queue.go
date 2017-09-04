@@ -36,13 +36,14 @@ func (db *Store) Next(ctx context.Context, resp mdm.Response) (*Command, error) 
 	var cmd *Command
 	switch resp.Status {
 	case "NotNow":
-		// move down, send next
+		// We will try this command later when the device is not
+		// responding with NotNow
 		x, a := cut(dc.Commands, resp.CommandUUID)
 		dc.Commands = a
 		if x == nil {
 			break
 		}
-		dc.Commands = append(dc.Commands, *x)
+		dc.NotNow = append(dc.NotNow, *x)
 
 	case "Acknowledged":
 		// move to completed, send next
@@ -78,13 +79,15 @@ func (db *Store) Next(ctx context.Context, resp mdm.Response) (*Command, error) 
 	}
 
 	// pop the first command from the queue and add it to the end.
+	// If the regular queue is empty, send a command that got 
+	// refused with NotNow before.
 	cmd, dc.Commands = popFirst(dc.Commands)
 	if cmd != nil {
 		dc.Commands = append(dc.Commands, *cmd)
-
-		if cmd.UUID == resp.CommandUUID && resp.Status == "NotNow" {
-			// This command was just handled by NotNow, ignore.
-			cmd = nil
+	} else if (resp.Status != "NotNow") {
+		cmd, dc.NotNow = popFirst(dc.NotNow)
+		if cmd != nil {
+			dc.Commands = append(dc.Commands, *cmd)
 		}
 	}
 
