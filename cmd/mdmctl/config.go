@@ -207,9 +207,7 @@ func validateServerURL(serverURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u.Path = "/"
 	serverURL = u.String()
-
 	return serverURL, nil
 }
 
