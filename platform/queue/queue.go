@@ -54,6 +54,28 @@ func (db *Store) Next(ctx context.Context, resp mdm.Response) ([]byte, error) {
 	return cmd.Payload, nil
 }
 
+func (db *Store) Clear(ctx context.Context, event mdm.CheckinEvent) error {
+	udid := event.Command.UDID
+	if event.Command.UserID != "" {
+		udid = event.Command.UserID
+	}
+	if event.Command.EnrollmentID != "" {
+		udid = event.Command.EnrollmentID
+	}
+
+	dc, err := db.DeviceCommand(udid)
+	if isNotFound(err) {
+		return nil
+	} else if err != nil {
+		return errors.Wrapf(err, "get device to clear queue, udid: %s", udid)
+	}
+
+	dc.Commands = nil
+	dc.NotNow = nil
+
+	return db.Save(dc)
+}
+
 func (db *Store) nextCommand(ctx context.Context, resp mdm.Response) (*Command, error) {
 	// The UDID is the primary key for the queue.
 	// Depending on the enrollment type, replace the UDID with a different ID type.
