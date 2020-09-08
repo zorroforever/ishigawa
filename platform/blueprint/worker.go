@@ -189,7 +189,8 @@ func (w *Worker) applyToDevice(ctx context.Context, bp Blueprint, udid string) e
 		})
 	}
 
-	for _, appURL := range bp.ApplicationURLs {
+	for i := range bp.ApplicationURLs {
+		appURL := &bp.ApplicationURLs[i]
 		level.Debug(w.logger).Log(
 			"msg", "creating mdm command request from blueprint",
 			"request_type", "InstallApplication",
@@ -203,7 +204,7 @@ func (w *Worker) applyToDevice(ctx context.Context, bp Blueprint, udid string) e
 			Command: &mdm.Command{
 				RequestType: "InstallApplication",
 				InstallApplication: &mdm.InstallApplication{
-					ManifestURL:     &appURL,
+					ManifestURL:     appURL,
 					ManagementFlags: intPtr(1),
 				},
 			},
