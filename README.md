@@ -1,6 +1,6 @@
 # MicroMDM - a devops friendly MDM server 
 
-[![CircleCI](https://circleci.com/gh/micromdm/micromdm/tree/main.svg?style=svg)](https://circleci.com/gh/micromdm/micromdm/tree/main)
+[![CI](https://github.com/micromdm/micromdm/workflows/CI/badge.svg)](https://github.com/micromdm/micromdm/actions)
 
 MicroMDM is a Mobile Device Management server for Apple Devices, focused on giving you all the power through an API. 
 
