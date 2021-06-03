@@ -1,12 +1,15 @@
 package mdm
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/micromdm/micromdm/mdm/appmanifest"
 )
 
 type CommandRequest struct {
-	UDID string `json:"udid"`
+	UDID        string `json:"udid"`
+	CommandUUID string `json:"command_uuid"`
 	*Command
 }
 
@@ -17,8 +20,11 @@ type CommandPayload struct {
 
 func NewCommandPayload(request *CommandRequest) (*CommandPayload, error) {
 	payload := &CommandPayload{
-		CommandUUID: uuid.New().String(),
+		CommandUUID: request.CommandUUID,
 		Command:     request.Command,
+	}
+	if strings.TrimSpace(payload.CommandUUID) == "" {
+		payload.CommandUUID = uuid.New().String()
 	}
 	return payload, nil
 }

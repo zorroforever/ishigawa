@@ -133,6 +133,49 @@ func TestUnmarshalCommandPayload(t *testing.T) {
 		})
 	}
 }
+func TestNewCommandPayload(t *testing.T) {
+	// Unit test cases for request params
+	var tests = []struct {
+		name    string
+		request CommandRequest
+		testFn  func(t *testing.T, payload *CommandPayload)
+	}{
+		{
+			name:    "Uses UUID passed to CommandRequest",
+			request: CommandRequest{CommandUUID: "this-uuid-should-be-used"},
+			testFn: func(t *testing.T, payload *CommandPayload) {
+				if payload.CommandUUID != "this-uuid-should-be-used" {
+					t.Error("CommandUUID is not set to CommandRequest.CommandUUID")
+				}
+			},
+		},
+		{
+			name:    "Defaults to generated UUID if CommandUUID is an empty string",
+			request: CommandRequest{CommandUUID: ""},
+			testFn: func(t *testing.T, payload *CommandPayload) {
+				if payload.CommandUUID == "" {
+					t.Error("CommandUUID should be a generated UUID")
+				}
+			},
+		},
+		{
+			name:    "Defaults to generated UUID if CommandUUID is all whitespace",
+			request: CommandRequest{CommandUUID: " "},
+			testFn: func(t *testing.T, payload *CommandPayload) {
+				if payload.CommandUUID == " " {
+					t.Error("CommandUUID should be a generated UUID")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var payload, _ = NewCommandPayload(&tt.request)
+			tt.testFn(t, payload)
+		})
+	}
+}
 
 func mustLoadFile(t *testing.T, filename string) []byte {
 	t.Helper()

@@ -11,12 +11,14 @@ func (c *CommandRequest) UnmarshalJSON(data []byte) error {
 	var request = struct {
 		UDID        string `json:"udid"`
 		RequestType string `json:"request_type"`
+		CommandUUID string `json:"command_uuid"`
 	}{}
 	if err := json.Unmarshal(data, &request); err != nil {
 		return errors.Wrap(err, "mdm: unmarshal json command request")
 	}
 	c.UDID = request.UDID
 	c.Command = &Command{}
+	c.CommandUUID = request.CommandUUID
 	return c.Command.UnmarshalJSON(data)
 }
 
