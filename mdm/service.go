@@ -21,11 +21,19 @@ type Service interface {
 type Middleware func(Service) Service
 
 const (
-	ConnectTopic      = "mdm.Connect"
-	AuthenticateTopic = "mdm.Authenticate"
-	TokenUpdateTopic  = "mdm.TokenUpdate"
-	CheckoutTopic     = "mdm.CheckOut"
+	ConnectTopic           = "mdm.Connect"
+	AuthenticateTopic      = "mdm.Authenticate"
+	TokenUpdateTopic       = "mdm.TokenUpdate"
+	CheckoutTopic          = "mdm.CheckOut"
+	GetBootstrapTokenTopic = "mdm.GetBootstrapToken"
+	SetBootstrapTokenTopic = "mdm.SetBootstrapToken"
 )
+
+// BootBootstrapTokenRetriever retrieves BootStrap Tokens for devices
+type BootstrapTokenRetriever interface {
+	// GetBootstrapToken returns the Bootstrap Token for the device by udid
+	GetBootstrapToken(ctx context.Context, udid string) ([]byte, error)
+}
 
 // Queue is an MDM Command Queue.
 type Queue interface {
@@ -34,12 +42,14 @@ type Queue interface {
 }
 
 type MDMService struct {
+	dev   BootstrapTokenRetriever
 	pub   pubsub.Publisher
 	queue Queue
 }
 
-func NewService(pub pubsub.Publisher, queue Queue) *MDMService {
+func NewService(pub pubsub.Publisher, queue Queue, dev BootstrapTokenRetriever) *MDMService {
 	return &MDMService{
+		dev:   dev,
 		pub:   pub,
 		queue: queue,
 	}

@@ -7,8 +7,14 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/google/uuid"
+	"github.com/groob/plist"
 	"github.com/pkg/errors"
 )
+
+// BootstrapToken holds MDM Bootstrap Token data
+type BootstrapToken struct {
+	BootstrapToken []byte
+}
 
 func (svc *MDMService) Checkin(ctx context.Context, event CheckinEvent) ([]byte, error) {
 	// reject user settings at the loginwindow.
@@ -33,8 +39,26 @@ func (svc *MDMService) Checkin(ctx context.Context, event CheckinEvent) ([]byte,
 		}
 	}
 
+	var resp []byte
+
+	if topic == GetBootstrapTokenTopic {
+		udid := event.Command.UDID
+
+		btBytes, err := svc.dev.GetBootstrapToken(ctx, udid)
+		if err != nil {
+			return nil, errors.Wrap(err, "fetching bootstrap token")
+		}
+
+		bt := &BootstrapToken{BootstrapToken: btBytes}
+
+		resp, err = plist.Marshal(bt)
+		if err != nil {
+			return nil, errors.Wrap(err, "marshal bootstrap token")
+		}
+	}
+
 	err = svc.pub.Publish(ctx, topic, msg)
-	return nil, errors.Wrapf(err, "publish checkin on topic: %s", topic)
+	return resp, errors.Wrapf(err, "publish checkin on topic: %s", topic)
 }
 
 func topicFromMessage(messageType string) (string, error) {
@@ -45,6 +69,10 @@ func topicFromMessage(messageType string) (string, error) {
 		return TokenUpdateTopic, nil
 	case "CheckOut":
 		return CheckoutTopic, nil
+	case "GetBootstrapToken":
+		return GetBootstrapTokenTopic, nil
+	case "SetBootstrapToken":
+		return SetBootstrapTokenTopic, nil
 	default:
 		return "", errors.Errorf("unknown checkin message type %s", messageType)
 	}
