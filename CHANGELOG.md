@@ -1,5 +1,6 @@
 ## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.8.0...main) TBD
 
+- Add GHCR container workflow. Add ARM build. (#745)
 - New in-memory-only command queue (#736)
 - Bootstrap token support (#781, #782)
 - Fix potential DEP sync data loss (#779)
