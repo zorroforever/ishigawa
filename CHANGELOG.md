@@ -21,7 +21,7 @@
 - Spruce up built-in landing page including better accessibility (#721, #751)
 - Documentation & CLI usage improvements (#729, #730, #748, #749)
 
-Thanks to our contributors for this release: @discentem, @korylprince, @williamtheaker, @bpmcneilly, @daemonsy, @ivanhata, @networkpanic, @HernanPaez
+Thanks to our contributors for this release: @discentem, @korylprince, @williamtheaker, @bpmcneilly, @daemonsy, @tomaswallentinus, @ivanhata, @networkpanic, @HernanPaez
 
 ## [v1.9.0-beta](https://github.com/micromdm/micromdm/compare/v1.8.0...v1.9.0-beta) October, 2021
 
