@@ -70,12 +70,44 @@ To communicate with your device fleet, MDM needs an APNS certificate issued by A
 
 Apple has a separate flow for the MDM vendor than the one for customers. For an in-house deployment without third parties, you must complete both the vendor and the customer process yourself. The `mdmctl mdmcert` command will help you with your APNS certificate needs.
 
+<details>
+  <summary><b>For testing and development scenarios only</b>, you can potentially obtain a push certificate from <a href="https://mdmcert.download/">https://mdmcert.download/</a>. Expand this section for more info.</summary>
+  
+  See [https://mdmcert.download/about](https://mdmcert.download/about) for more info and <b>disclaimers</b> about this option. Skip to [Generate MDM CSR](#generate-mdm-csr) if this does not apply to your situation. 
+  
+  ### mdmcert.download
+
+1. [Register for an mdmcert.download account](https://mdmcert.download/registration)
+1. Submit a CSR to mdmcert.download's API
+
+    `mdmctl mdmcert.download -new -email=THE_EMAIL_YOU_REGISTERED_WITH@acme.com`
+
+1. If successful, you should get this response from mdmcert.download
+
+    ```
+    Request successfully sent to mdmcert.download. Your CSR should now
+    be signed. Check your email for next steps. Then use the -decrypt option
+    to extract the CSR request which will then be uploaded to Apple.
+    ```
+1. Download the encrypted CSR from your email.
+1. Decrypt your CSR.
+
+    `mdmctl mdmcert.download decrypt=~/mdm_signed_request.20171122_094910_220.plist.b64.p7`
+1. Sign into [identity.apple.com](identity.apple.com) with your Apple ID. This Apple ID will likely match the domain that you signed up to mdmcert.download with and the domain where you intend to host your MDM server. 
+1. Download your push cert 🎉
+
+You now have a push cert from mdmcert.download. You do not have to proceed with [Generate MDM CSR](#generate-mdm-csr) below. Continue with [Upload your push certificate](#upload-your-push-certificate).
+  
+</details>
+
+### Generate MDM CSR
+
 Create a request for the MDM CSR, with a password used to encrypt the private key. 
 After this step you will have a new `mdm-certificates` directory, with the necessary files. 
 ```
 mdmctl mdmcert vendor -password=secret -country=US -email=admin@acme.co
 ```
-### Generate MDM CSR
+
 Log in to the Apple Developer Portal (https://developer.apple.com/account), and navigate to the Certificates, IDs & Profiles section (https://developer.apple.com/account/resources/certificates/list).
   1. Click the plus symbol (+) next to *Certificates*
   2. Select *MDM CSR* under the *Services* section, click *Continue*
@@ -98,6 +130,8 @@ Sign in to [identity.apple.com](https://identity.apple.com) and upload the `Push
 If you're getting certificates for multiple environments (staging, production) or running multiple in house MDM instances, you MUST sign a separate push request for each one. Using the same vendor certificate is okay, but using the same push certificate is not. 
 
 If you've uploaded the plist, you will be offered a certificate, which is signed for the `mdm-certificates/PushCertificatePrivateKey.key` key. Copy the certificate to the same directory. 
+
+# Upload your push certificate
 
 Finally, upload the certificate to MicroMDM.
 
