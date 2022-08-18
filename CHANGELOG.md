@@ -1,5 +1,18 @@
 ## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.9.0...main)
 
+Thanks to our contributors for this release: @networkpanic, @meta-github, @korylprince, @ayush5harma, @discentem, @hrgbcxd
+
+- Add support for `Priority` in ScheduleOSUpdate command (#803)
+- Added RefreshCellularPlans support (#809)
+- Add LOM commands (#839)
+  - See Apple's newer [documentation on configuring MDM via LOM](https://support.apple.com/guide/deployment/lights-out-management-payload-settings-dep580cf25bc/web)
+  - Including [example configurations](https://support.apple.com/guide/deployment/lom-configuration-command-issuance-dep5e14207f2/1/web/1.0)- Fix RotateFileVaultKey panics (#801)
+- Add ability to sign apps when they're uploaded: `mdmctl apply app -sign-identity` (#785)
+- `mdmctl`: don't send a request body for GET requests (#821)
+- Updated `schedule_os_update` script to support more parameters. (#828)
+- Switch to using [cfgprofiles](https://github.com/jessepeterson/cfgprofiles) for profile generation (#827)
+- Documentation & CLI usage improvements (#799, #811, #817, #819, #823)
+
 ## [v1.9.0](https://github.com/micromdm/micromdm/compare/v1.8.0...v1.9.0) January 27, 2022
 
 - Add new fields for the ScheduleOSUpdate command (#793)
