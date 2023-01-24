@@ -1,6 +1,12 @@
-## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.10.0...main)
+## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.10.1...main)
 
 This release is eagerly awaiting *your* awesome contribution!
+
+## [v1.10.1](https://github.com/micromdm/micromdm/compare/v1.10.0...v1.10.1) January 24, 2023
+
+Patch release. Thanks to our contributors: @korylprince
+
+- Fix certificate check for DEP and OTA enrollment attempts (#854, #855)
 
 ## [v1.10.0](https://github.com/micromdm/micromdm/compare/v1.9.0...v1.10.0) January 13, 2023
 
