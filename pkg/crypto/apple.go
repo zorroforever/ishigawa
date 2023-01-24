@@ -1,6 +1,9 @@
 package crypto
 
 import (
+	"crypto"
+	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -91,19 +94,38 @@ pyQPbp8orlXe+tA8JA==
 -----END CERTIFICATE-----
 `
 
-// VerifyFromAppleDeviceCA verifies a certificate was signed by Apple's iPhone Device CA.
-// TODO: We want to have more intensive verification (like the whole provided chain).
-// TODO: Implement some sort of cache so we don't need to parse PEM & DER every invocation.
-func VerifyFromAppleDeviceCA(c *x509.Certificate) error {
+func mustParsePublicKey(cert string) *rsa.PublicKey {
 	block, _ := pem.Decode([]byte(appleiPhoneDeviceCAPEM))
 	if block == nil || block.Type != "CERTIFICATE" {
 		panic("appleiPhoneDeviceCAPEM: invalid PEM block")
 	}
-	parent, err := x509.ParseCertificate(block.Bytes)
+	c, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		panic(fmt.Sprintf("appleiPhoneDeviceCAPEM: err parsing: %s", err))
+		panic(fmt.Sprintf("appleiPhoneDeviceCAPEM: err parsing: %v", err))
 	}
-	// Note we CheckSignatureFrom() as we cannot Verify the certificate chain
-	// (known expired intermediate)
-	return c.CheckSignatureFrom(parent)
+
+	key, ok := c.PublicKey.(*rsa.PublicKey)
+	if !ok {
+		panic("appleiPhoneDeviceCAPEM: invalid key type")
+	}
+
+	return key
+}
+
+// extract public key from appleiPhoneDeviceCAPEM
+var appleiPhoneDeviceCAPublicKey = mustParsePublicKey(appleiPhoneDeviceCAPEM)
+
+// VerifyFromAppleDeviceCA verifies a certificate was signed by Apple's iPhone Device CA.
+// Manually verify the certificate since Go has deprecated verifying SHA1WithRSA x509 certificates.
+func VerifyFromAppleDeviceCA(c *x509.Certificate) error {
+	if c.SignatureAlgorithm != x509.SHA1WithRSA {
+		return x509.ErrUnsupportedAlgorithm
+	}
+
+	hashed := sha1.Sum(c.RawTBSCertificate)
+	if err := rsa.VerifyPKCS1v15(appleiPhoneDeviceCAPublicKey, crypto.SHA1, hashed[:], c.Signature); err != nil {
+		return err
+	}
+
+	return nil
 }
