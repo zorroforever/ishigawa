@@ -1,8 +1,20 @@
 ## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.10.1...main)
 
+This release will include new features and fixes.
+
+Thanks to our contributors: @williamtheaker, @korylprince, @krmzbbr
+
+- Add Dependabot updating (#857)
 - Add SoftwareUpdateSettings to Settings command (#771, #856)
-- Ensure errors are logged on the checkin and connect endpoints (#871)
-- Add support for raw plist commands (#864)
+- Add tools script [install_vpp_application](https://github.com/micromdm/micromdm/blob/main/tools/api/commands/install_vpp_application) to install VPP apps (#865)
+  - Note MicroMDM doesn't support VPP/A&B itself.
+- Fix bug that prevented errors being logged on the Checkin and Connect endpoints (#871)
+- Add support for submitting "raw" plist MDM commands! (#864)
+  - See the [docs](https://github.com/micromdm/micromdm/blob/main/docs/user-guide/api-and-webhooks.md#schedule-raw-commands-with-the-api) for how to use!
+- Add [NanoMDM](https://github.com/micromdm/nanomdm)-compatible Declarative Device Management (DDM) "proxy" support. (#882)
+  - Use the `-dm` switch to extract and forward the Declarative Management protocol Endpoints to a specialized HTTP server. Such as [KMFDDM](https://github.com/jessepeterson/kmfddm).
+  - Check out the older [blog post about DDM](https://micromdm.io/blog/wwdc21-declarative-management/) for more info.
+- Project dependency updates (#858, #859, #860, #861, #867, #869, #873, #872, #874, #875, #879)
 
 ## [v1.10.1](https://github.com/micromdm/micromdm/compare/v1.10.0...v1.10.1) January 24, 2023
 

@@ -255,9 +255,32 @@ Authorization: Basic bWljcm9tZG06c3VwZXJzZWNyZXQ=
 </plist>
 ```
 
-A helper script is also available at `./tools/api/raw_command`:
+A helper script for sending raw plist commands to MicroMDM is also available at `./tools/api/raw_command`:
 
 `$ ./raw_command 55693EB3-DF03-5FD1-9263-F7CDB8AD7FFD path/to/cmd.plist`
+
+The first parameter is the UDID.
+
+For help generating commands [NanoMDM](https://github.com/micromdm/nanomdm) has a helper tool — [cmdr.py](https://github.com/micromdm/nanomdm/blob/main/tools/cmdr.py) — that works like this:
+
+```sh
+$ ./tools/cmdr.py ProfileList
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Command</key>
+	<dict>
+		<key>RequestType</key>
+		<string>ProfileList</string>
+	</dict>
+	<key>CommandUUID</key>
+	<string>dc87e49e-6060-4014-97b1-7121c05def6e</string>
+</dict>
+</plist>
+```
+
+Which can then be modified (or not) and used with the above `raw_command` script.
 
 ## Clearing the Command Queue
 
