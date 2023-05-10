@@ -1,6 +1,8 @@
-## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.10.1...main)
+## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.11.0...main)
 
-This release will include new features and fixes.
+## [v1.11.0](https://github.com/micromdm/micromdm/compare/v1.10.1...v1.11.0)
+
+This release includes new features and fixes.
 
 Thanks to our contributors: @williamtheaker, @korylprince, @krmzbbr
 
