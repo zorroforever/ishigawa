@@ -72,8 +72,9 @@ Upload this file to https://identity.apple.com and download the signed
 certificate. Then use the 'mdmctl mdmcert upload' command to upload it,
 (and the above private key) into MicroMDM.
 
+
 `
-	fmt.Println(usageText)
+	fmt.Print(usageText)
 	return nil
 
 }
@@ -279,7 +280,7 @@ func sendMdmcertDownloadRequest(client *http.Client, req *http.Request) error {
 		return err
 	}
 	if jsn.Result != "success" {
-		return fmt.Errorf("got unexpected result body: %q\n", jsn.Result)
+		return fmt.Errorf("got unexpected result body: %q", jsn.Result)
 	}
 	return nil
 }

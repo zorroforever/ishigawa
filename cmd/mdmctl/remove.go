@@ -69,8 +69,9 @@ Valid resource types:
   * profiles
   * block
   * dep-autoassigner
+
 `
 
-	fmt.Println(getUsage)
+	fmt.Print(getUsage)
 	return nil
 }

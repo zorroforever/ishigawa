@@ -100,8 +100,9 @@ Examples:
   # Apply a DEP Profile.
   mdmctl apply dep-profiles -f /path/to/dep-profile.json
 
+
 `
-	fmt.Println(applyUsage)
+	fmt.Print(applyUsage)
 	return nil
 }
 
@@ -296,8 +297,8 @@ func (cmd *applyCommand) applyProfile(args []string) error {
 	)
 	flagset.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s\n",
-			`Upload profiles to the server. 
-			
+			`Upload profiles to the server.
+
 Uploaded profiles can also be specified in a blueprint, which will be applied on device enrollment.
 This command can also be used to replace the enrollment profile.
 Profiles can be signed before upload.

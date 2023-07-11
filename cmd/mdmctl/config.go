@@ -79,8 +79,9 @@ func (cmd *configCommand) Usage() error {
 mdmctl config print
 mdmctl config set -h
 mdmctl config switch -h
+
 `
-	fmt.Println(help)
+	fmt.Print(help)
 	return nil
 }
 
@@ -108,7 +109,7 @@ func migrateServerConfig(configName string) error {
 	var serverCfg *ServerConfig
 	err = json.Unmarshal(cfgData, &serverCfg)
 	if err != nil {
-		return errors.Wrapf(err, "failed to unmarshal %s", configPath)
+		return fmt.Errorf("failed to unmarshal %s: %w", configPath, err)
 	}
 	if err = saveServerConfig(serverCfg, configName); err != nil {
 		return err
@@ -116,13 +117,10 @@ func migrateServerConfig(configName string) error {
 	if err = os.Remove(configPath); err != nil {
 		return err
 	}
-	err = switchServerConfig(configName)
-	if err != nil {
-		err = fmt.Errorf("Failed to set %s as active config", configName)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to set %s as active config", configName)
-		}
+	if err = switchServerConfig(configName); err != nil {
+		return fmt.Errorf("failed to set %s as active config: %w", configName, err)
 	}
+
 	fmt.Println("Successfully migrated old config.")
 	return nil
 }
@@ -309,8 +307,7 @@ func LoadServerConfig() (*ServerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	var serverCfg ServerConfig
-	serverCfg = cfg.Servers[cfg.Active]
+	var serverCfg ServerConfig = cfg.Servers[cfg.Active]
 	return &serverCfg, nil
 }
 

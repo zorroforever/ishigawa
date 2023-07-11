@@ -60,8 +60,9 @@ Commands:
     vendor
     push
     upload
+
 `
-	fmt.Println(usageText)
+	fmt.Print(usageText)
 	return nil
 
 }
