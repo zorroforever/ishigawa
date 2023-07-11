@@ -54,6 +54,33 @@ func (db *Store) Next(ctx context.Context, resp mdm.Response) ([]byte, error) {
 	return cmd.Payload, nil
 }
 
+func (db *Store) ViewQueue(ctx context.Context, event mdm.CheckinEvent) ([]*mdm.Command, error) {
+	udid := event.Command.UDID
+	if event.Command.UserID != "" {
+		udid = event.Command.UserID
+	}
+	if event.Command.EnrollmentID != "" {
+		udid = event.Command.EnrollmentID
+	}
+
+	dc, err := db.DeviceCommand(udid)
+	if isNotFound(err) {
+		return nil, nil
+	} else if err != nil {
+		return nil, errors.Wrapf(err, "get device commands, udid: %s", udid)
+	}
+
+	cmds := make([]*mdm.Command, len(dc.Commands))
+	for idx, cmd := range dc.Commands {
+		cmds[idx] = &mdm.Command{
+			UUID:    cmd.UUID,
+			Payload: cmd.Payload,
+		}
+	}
+
+	return cmds, nil
+}
+
 func (db *Store) Clear(ctx context.Context, event mdm.CheckinEvent) error {
 	udid := event.Command.UDID
 	if event.Command.UserID != "" {

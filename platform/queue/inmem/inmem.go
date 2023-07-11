@@ -121,6 +121,30 @@ func (q *QueueInMem) Clear(_ context.Context, event mdm.CheckinEvent) error {
 	return nil
 }
 
+// View returns the command queue for the device in event
+func (q *QueueInMem) ViewQueue(_ context.Context, event mdm.CheckinEvent) ([]*mdm.Command, error) {
+	udid := event.Command.UDID
+	if event.Command.UserID != "" {
+		udid = event.Command.UserID
+	}
+	if event.Command.EnrollmentID != "" {
+		udid = event.Command.EnrollmentID
+	}
+
+	l := q.getList(udid)
+
+	cmds := make([]*mdm.Command, 0, l.Len())
+	for item := l.Front(); item != nil; item = item.Next() {
+		cmd := item.Value.(*queuedCommand)
+		cmds = append(cmds, &mdm.Command{
+			UUID:    cmd.uuid,
+			Payload: cmd.payload,
+		})
+	}
+
+	return cmds, nil
+}
+
 func (q *QueueInMem) startPolling(pubsub pubsub.PublishSubscriber) error {
 	events, err := pubsub.Subscribe(context.TODO(), "command-queue", command.CommandTopic)
 	if err != nil {
