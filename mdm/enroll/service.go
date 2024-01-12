@@ -193,7 +193,6 @@ const bootstrapToken = "com.apple.mdm.bootstraptoken"
 
 func (svc *service) MakeEnrollmentProfile() (*cfgprofiles.Profile, error) {
 	profile := cfgprofiles.NewProfile(EnrollmentProfileId)
-	profile.PayloadScope = "System"
 	profile.PayloadOrganization = profilePayloadOrganization
 	profile.PayloadDisplayName = profilePayloadDisplayName
 	profile.PayloadDescription = profilePayloadDescription
