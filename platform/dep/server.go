@@ -15,6 +15,7 @@ type Endpoints struct {
 	GetDeviceDetailsEndpoint endpoint.Endpoint
 	AssignProfileEndpoint    endpoint.Endpoint
 	RemoveProfileEndpoint    endpoint.Endpoint
+	DoActivationLockEndpoint endpoint.Endpoint
 }
 
 func MakeServerEndpoints(s Service, outer endpoint.Middleware, others ...endpoint.Middleware) Endpoints {
@@ -25,6 +26,7 @@ func MakeServerEndpoints(s Service, outer endpoint.Middleware, others ...endpoin
 		FetchProfileEndpoint:     endpoint.Chain(outer, others...)(MakeFetchProfileEndpoint(s)),
 		GetAccountInfoEndpoint:   endpoint.Chain(outer, others...)(MakeGetAccountInfoEndpoint(s)),
 		GetDeviceDetailsEndpoint: endpoint.Chain(outer, others...)(MakeGetDeviceDetailsEndpoint(s)),
+		DoActivationLockEndpoint: endpoint.Chain(outer, others...)(MakeDoActivationLockEndpoint(s)),
 	}
 }
 
@@ -74,6 +76,13 @@ func RegisterHTTPHandlers(r *mux.Router, e Endpoints, options ...httptransport.S
 	r.Methods("DELETE").Path("/v1/dep/profiles").Handler(httptransport.NewServer(
 		e.RemoveProfileEndpoint,
 		decodeRemoveProfileRequest,
+		httputil.EncodeJSONResponse,
+		options...,
+	))
+
+	r.Methods("POST").Path("/v1/dep/activationlock").Handler(httptransport.NewServer(
+		e.DoActivationLockEndpoint,
+		decodeActivationLockRequest,
 		httputil.EncodeJSONResponse,
 		options...,
 	))
