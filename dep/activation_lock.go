@@ -22,7 +22,7 @@ type ActivationLockResponse struct {
 	Status       string `json:"response_status"`
 }
 
-func (c *Client) ActivationLock(alr ActivationLockRequest) (*ActivationLockResponse, error) {
+func (c *Client) ActivationLock(alr *ActivationLockRequest) (*ActivationLockResponse, error) {
 	req, err := c.newRequest("POST", activationLockPath, &alr)
 	if err != nil {
 		return nil, errors.Wrap(err, "create activation lock request")

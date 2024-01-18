@@ -9,13 +9,12 @@ import (
 	"net/http"
 )
 
-func (svc *DEPService) ActivationLock(ctx context.Context, device string, escrowKey string, lostMessage string) (*dep.ActivationLockResponse, error) {
+func (svc *DEPService) ActivationLock(ctx context.Context, r *dep.ActivationLockRequest) (*dep.ActivationLockResponse, error) {
 	if svc.client == nil {
 		return nil, errors.New("DEP not configured yet. add a DEP token to enable DEP")
 	}
-	var req *dep.ActivationLockRequest
+	return svc.client.ActivationLock(r)
 
-	return svc.client.ActivationLock(device, escrowKey, lostMessage)
 }
 
 type activationLockRequest struct {
@@ -44,7 +43,7 @@ func decodeActivationLockResponse(_ context.Context, r *http.Response) (interfac
 func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(activationLockRequest)
-		resp, err := svc.ActivationLock(ctx, req.Device, req.EscrowKey, req.LostMessage)
+		resp, err := svc.ActivationLock(ctx, req.ActivationLockRequest)
 		return activationLockResponse{
 			ActivationLockResponse: resp,
 			Err:                    err,
@@ -52,10 +51,8 @@ func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
-func (e Endpoints) DoActivationLock(ctx context.Context, device string, escrowKey string, lostMessage string) (*dep.ActivationLockResponse, error) {
-	request := activationLockRequest{Device: device,
-		EscrowKey:   escrowKey,
-		LostMessage: lostMessage}
+func (e Endpoints) ActivationLock(ctx context.Context, r *dep.ActivationLockRequest) (*dep.ActivationLockResponse, error) {
+	request := r
 	resp, err := e.DoActivationLockEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
