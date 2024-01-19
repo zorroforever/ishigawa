@@ -251,7 +251,7 @@ func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*ht
 
 	req.Header.Add("User-Agent", c.userAgent)
 	req.Header.Add("Content-Type", mediaType2)
-	req.Header.Add("Accept", mediaType2)
+	//req.Header.Add("Accept", mediaType2)
 	req.Header.Add(XServerProtocolVersionHeader, XServerProtocolVersion)
 	return req, nil
 }
