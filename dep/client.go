@@ -3,6 +3,7 @@ package dep
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -19,7 +20,9 @@ var version = "dev"
 
 const (
 	defaultBaseURL               = "https://mdmenrollment.apple.com"
+	defaultBaseURL2              = "https://deviceservices-external.apple.com"
 	mediaType                    = "application/json;charset=UTF8"
+	mediaType2                   = "application/x-www-form-urlencoded;charset=UTF8"
 	XServerProtocolVersionHeader = "X-Server-Protocol-Version"
 	XServerProtocolVersion       = "3"
 )
@@ -66,6 +69,23 @@ type OAuthParameters struct {
 
 func NewClient(p OAuthParameters, opts ...Option) *Client {
 	baseURL, _ := url.Parse(defaultBaseURL)
+	client := Client{
+		consumerKey:    p.ConsumerKey,
+		consumerSecret: p.ConsumerSecret,
+		accessToken:    p.AccessToken,
+		accessSecret:   p.AccessSecret,
+		client:         http.DefaultClient,
+		userAgent:      path.Join("micromdm", version),
+		baseURL:        baseURL,
+	}
+	for _, optFn := range opts {
+		optFn(&client)
+	}
+	return &client
+}
+
+func NewClient2(p OAuthParameters, opts ...Option) *Client {
+	baseURL, _ := url.Parse(defaultBaseURL2)
 	client := Client{
 		consumerKey:    p.ConsumerKey,
 		consumerSecret: p.ConsumerSecret,
@@ -197,6 +217,32 @@ func (c *Client) newRequest(method, urlStr string, body interface{}) (*http.Requ
 	return req, nil
 }
 
+func (c *Client) newRequest2(method, urlStr string, body interface{}) (*http.Request, error) {
+	rel, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, errors.Wrapf(err, "parse dep request url %s", urlStr)
+	}
+
+	u := c.baseURL.ResolveReference(rel)
+	var buf bytes.Buffer
+	if body != nil {
+		if err := json.NewEncoder(&buf).Encode(body); err != nil {
+			return nil, errors.Wrap(err, "encode http body for DEP request")
+		}
+	}
+
+	req, err := http.NewRequest(method, u.String(), &buf)
+	if err != nil {
+		return nil, errors.Wrapf(err, "creating %s request to dep %s", method, u.String())
+	}
+
+	req.Header.Add("User-Agent", c.userAgent)
+	req.Header.Add("Content-Type", mediaType2)
+	req.Header.Add("Accept", mediaType2)
+	req.Header.Add(XServerProtocolVersionHeader, XServerProtocolVersion)
+	return req, nil
+}
+
 func (c *Client) do(req *http.Request, into interface{}) error {
 	if err := c.session(); err != nil {
 		return errors.Wrapf(err, "get session for request to %s", c.baseURL.String())
@@ -214,6 +260,27 @@ func (c *Client) do(req *http.Request, into interface{}) error {
 		return errors.Errorf("unexpected dep response. status=%d DEP API Error: %s", resp.StatusCode, string(body))
 	}
 	err = json.NewDecoder(resp.Body).Decode(into)
+	return errors.Wrap(err, "decode DEP response body")
+
+}
+func (c *Client) do2(req *http.Request, into interface{}) error {
+	//if err := c.session(); err != nil {
+	//	return errors.Wrapf(err, "get session for request to %s", c.baseURL.String())
+	//}
+	//req.Header.Add("X-ADM-Auth-Session", c.authSessionToken)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "perform dep request")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return errors.Errorf("unexpected dep response. status=%d DEP API Error: %s", resp.StatusCode, string(body))
+	}
+	err = xml.NewDecoder(resp.Body).Decode(into)
+	//err = json.NewDecoder(resp.Body).Decode(into)
 	return errors.Wrap(err, "decode DEP response body")
 
 }

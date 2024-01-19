@@ -60,6 +60,7 @@ type Server struct {
 	RemoveDB               block.Store
 	CommandWebhookURL      string
 	DEPClient              *dep.Client
+	DEPClient2             *dep.Client
 	SyncDB                 *syncbuiltin.DB
 	NoCmdHistory           bool
 	ValidateSCEPIssuer     bool
@@ -343,6 +344,7 @@ func (c *Server) setupDepClient() error {
 	}
 
 	c.DEPClient = dep.NewClient(conf, opts...)
+	c.DEPClient2 = dep.NewClient2(conf, opts...)
 	return nil
 }
 

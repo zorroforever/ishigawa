@@ -310,10 +310,14 @@ func serve(args []string) error {
 		command.RegisterHTTPHandlers(r, commandEndpoints, options...)
 
 		var dc depapi.DEPClient
+		var dc2 depapi.DEPClient
 		if sm.DEPClient != nil {
 			dc = sm.DEPClient
 		}
-		depsvc := depapi.New(dc, sm.PubClient)
+		if sm.DEPClient2 != nil {
+			dc2 = sm.DEPClient2
+		}
+		depsvc := depapi.New(dc, dc2, sm.PubClient)
 		depsvc.Run()
 		depEndpoints := depapi.MakeServerEndpoints(depsvc, basicAuthEndpointMiddleware)
 		depapi.RegisterHTTPHandlers(r, depEndpoints, options...)

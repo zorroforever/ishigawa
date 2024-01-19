@@ -16,6 +16,7 @@ type Service interface {
 	GetDeviceDetails(ctx context.Context, serials []string) (*dep.DeviceDetailsResponse, error)
 	FetchProfile(ctx context.Context, uuid string) (*dep.Profile, error)
 	ActivationLock(ctx context.Context, r *dep.ActivationLockRequest) (*dep.ActivationLockResponse, error)
+	DisableActivationLock(ctx context.Context, r *dep.DisableActivationLockRequest) (*dep.DisableActivationLockResponse, error)
 }
 
 type DEPClient interface {
@@ -26,11 +27,13 @@ type DEPClient interface {
 	Account() (*dep.Account, error)
 	DeviceDetails(...string) (*dep.DeviceDetailsResponse, error)
 	ActivationLock(*dep.ActivationLockRequest) (*dep.ActivationLockResponse, error)
+	DisableActivationLock(*dep.DisableActivationLockRequest) (*dep.DisableActivationLockResponse, error)
 }
 
 type DEPService struct {
 	mtx        sync.RWMutex
 	client     DEPClient
+	client2    DEPClient
 	subscriber pubsub.Subscriber
 }
 
@@ -38,6 +41,6 @@ func (svc *DEPService) Run() error {
 	return svc.watchTokenUpdates(svc.subscriber)
 }
 
-func New(client DEPClient, subscriber pubsub.Subscriber) *DEPService {
-	return &DEPService{client: client, subscriber: subscriber}
+func New(client DEPClient, client2 DEPClient, subscriber pubsub.Subscriber) *DEPService {
+	return &DEPService{client: client, client2: client2, subscriber: subscriber}
 }
