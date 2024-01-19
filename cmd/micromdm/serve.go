@@ -55,7 +55,7 @@ const homePage = `<!doctype html>
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>MicroMDM</title>
+	<title>GeexMDM</title>
   <style>
 @font-face {
   font-family: system;
@@ -84,7 +84,7 @@ body {
  </head>
 <body>
 
-<h1>MicroMDM</h1>
+<h1>即科智能管控</h1>
 <svg xmlns="http://www.w3.org/2000/svg" width="204" height="192" viewBox="0 0 51 48" focusable="false" aria-hidden="true">
   <g fill="none" fill-rule="evenodd">
       <path fill="#366BE0" d="M34 38L0 20 34 0z"/>
@@ -94,7 +94,7 @@ body {
 </svg>
 
 
-<p><a class=enrollment href="mdm/enroll">Enroll a device</a></p>
+<p><a class=enrollment href="mdm/enroll">下载配置</a></p>
 
 </body>
 </html>
