@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -274,11 +277,16 @@ func (c *Client) do2(req *http.Request, into interface{}) error {
 		return errors.Wrap(err, "perform dep request")
 	}
 	defer resp.Body.Close()
-
+	logger := log.NewLogfmtLogger(os.Stderr)
+	level.Info(logger).Log(
+		"msg", "DisableActivationLock do2",
+		"body", resp.Body,
+	)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
 		return errors.Errorf("unexpected dep response. status=%d DEP API Error: %s", resp.StatusCode, string(body))
 	}
+
 	err = xml.NewDecoder(resp.Body).Decode(into)
 	//err = json.NewDecoder(resp.Body).Decode(into)
 	return errors.Wrap(err, "decode DEP response body")
