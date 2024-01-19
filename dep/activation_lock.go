@@ -1,11 +1,8 @@
 package dep
 
 import (
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	"net/url"
-	"os"
 )
 
 const (
@@ -60,7 +57,7 @@ func (c *Client) ActivationLock(alr *ActivationLockRequest) (*ActivationLockResp
 }
 
 func (c *Client) DisableActivationLock(dalr *DisableActivationLockRequest) (*DisableActivationLockResponse, error) {
-	logger := log.NewLogfmtLogger(os.Stderr)
+
 	// 使用url.Values来拼接URL参数
 	values := url.Values{}
 	values.Add("serial", url.QueryEscape(dalr.Serial))
@@ -76,22 +73,11 @@ func (c *Client) DisableActivationLock(dalr *DisableActivationLockRequest) (*Dis
 		Guid:      url.QueryEscape(dalr.Guid),
 		EscrowKey: url.QueryEscape(dalr.EscrowKey),
 	}
-	level.Info(logger).Log(
-		"msg", "DisableActivationLockRequestBodyInfo",
-		"body.OrgName", url.QueryEscape(dalr.OrgName),
-		"body.Guid", url.QueryEscape(dalr.Guid),
-		"body.EscrowKey", url.QueryEscape(dalr.EscrowKey),
-	)
+
 	// 将url.Values编码为字符串形式
 	queryString := values.Encode()
 	var toUri = disableActivationLockPath + "?" + queryString
-	level.Info(logger).Log(
-		"msg", "DisableActivationLock body",
-		"toUri", toUri,
-		"body.OrgName", body.OrgName,
-		"body.Guid", body.Guid,
-		"body.EscrowKey", body.EscrowKey,
-	)
+
 	req, err := c.newRequest2("POST", toUri, &body)
 	if err != nil {
 		return nil, errors.Wrap(err, "create activation lock request")

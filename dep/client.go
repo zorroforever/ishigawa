@@ -221,6 +221,7 @@ func (c *Client) newRequest(method, urlStr string, body interface{}) (*http.Requ
 }
 
 func (c *Client) newRequest2(method, urlStr string, body interface{}) (*http.Request, error) {
+	logger := log.NewLogfmtLogger(os.Stderr)
 	rel, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, errors.Wrapf(err, "parse dep request url %s", urlStr)
@@ -233,7 +234,11 @@ func (c *Client) newRequest2(method, urlStr string, body interface{}) (*http.Req
 			return nil, errors.Wrap(err, "encode http body for DEP request")
 		}
 	}
-
+	level.Info(logger).Log(
+		"msg", "newRequest2 url",
+		"url", u.String(),
+		"body", &buf,
+	)
 	req, err := http.NewRequest(method, u.String(), &buf)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating %s request to dep %s", method, u.String())
