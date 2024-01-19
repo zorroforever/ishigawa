@@ -229,8 +229,6 @@ func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*ht
 
 	u := c.baseURL.ResolveReference(rel)
 	//var buf bytes.Buffer
-	// 构建一个strings.Reader，用于将字符串数据作为请求体
-	requestBody := strings.NewReader(formEncodedData)
 	if err != nil {
 		return nil, errors.Wrap(err, "encode http body for DEP request")
 	}
@@ -238,10 +236,10 @@ func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*ht
 	level.Info(logger).Log(
 		"msg", "newRequest2 url",
 		"url", u.String(),
-		"body", &requestBody,
+		"body", formEncodedData,
 	)
 
-	req, err := http.NewRequest(method, u.String(), requestBody)
+	req, err := http.NewRequest(method, u.String(), strings.NewReader(formEncodedData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating %s request to dep %s", method, u.String())
 	}
