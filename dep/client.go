@@ -267,7 +267,12 @@ func (c *Client) do(req *http.Request, into interface{}) error {
 		return errors.Wrap(err, "perform dep request")
 	}
 	defer resp.Body.Close()
-
+	logger := log.NewLogfmtLogger(os.Stderr)
+	level.Info(logger).Log(
+		"msg", "====================== do1",
+		"body", resp.Body,
+		"code", resp.StatusCode,
+	)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
 		return errors.Errorf("unexpected dep response. status=%d DEP API Error: %s", resp.StatusCode, string(body))
@@ -289,7 +294,7 @@ func (c *Client) do2(req *http.Request, into interface{}) error {
 	defer resp.Body.Close()
 	logger := log.NewLogfmtLogger(os.Stderr)
 	level.Info(logger).Log(
-		"msg", "DisableActivationLock do2",
+		"msg", "====================== do2",
 		"body", resp.Body,
 		"code", resp.StatusCode,
 	)
