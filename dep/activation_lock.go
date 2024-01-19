@@ -30,7 +30,9 @@ type DisableActivationLockRequest struct {
 	Imei2       string `json:"imei2"`
 	Meid        string `json:"meid"`
 	ProductType string `json:"productType"`
-	body        DisableActivationLockRequestBodyInfo
+	OrgName     string `json:"orgName"`
+	Guid        string `json:"guid"`
+	EscrowKey   string `json:"escrowKey"`
 }
 
 type DisableActivationLockRequestBodyInfo struct {
@@ -70,15 +72,21 @@ func (c *Client) DisableActivationLock(dalr *DisableActivationLockRequest) (*Dis
 	//values.Add("guid", dalr.Guid)
 	//values.Add("escrowKey", dalr.EscrowKey)
 	body := DisableActivationLockRequestBodyInfo{
-		OrgName:   url.QueryEscape(dalr.body.OrgName),
-		Guid:      url.QueryEscape(dalr.body.Guid),
-		EscrowKey: url.QueryEscape(dalr.body.EscrowKey),
+		OrgName:   url.QueryEscape(dalr.OrgName),
+		Guid:      url.QueryEscape(dalr.Guid),
+		EscrowKey: url.QueryEscape(dalr.EscrowKey),
 	}
+	level.Info(logger).Log(
+		"msg", "DisableActivationLockRequestBodyInfo",
+		"body.OrgName", url.QueryEscape(dalr.OrgName),
+		"body.Guid", url.QueryEscape(dalr.Guid),
+		"body.EscrowKey", url.QueryEscape(dalr.EscrowKey),
+	)
 	// 将url.Values编码为字符串形式
 	queryString := values.Encode()
 	var toUri = disableActivationLockPath + "?" + queryString
 	level.Info(logger).Log(
-		"msg", "DisableActivationLock",
+		"msg", "DisableActivationLock body",
 		"toUri", toUri,
 		"body.OrgName", body.OrgName,
 		"body.Guid", body.Guid,
