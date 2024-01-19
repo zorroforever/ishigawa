@@ -30,7 +30,9 @@ func (c *Command) MarshalPlist() (interface{}, error) {
 		"OSUpdateStatus",
 		"EnableRemoteDesktop",
 		"DisableRemoteDesktop",
-		"ActivationLockBypassCode":
+		"ActivationLockBypassCode",
+		"ClearActivationLockBypassCode":
+
 		return &struct {
 			RequestType string
 		}{

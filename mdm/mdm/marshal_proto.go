@@ -47,7 +47,8 @@ func commandToProto(cmd *Command) (*mdmproto.Command, error) {
 		"OSUpdateStatus",
 		"EnableRemoteDesktop",
 		"DisableRemoteDesktop",
-		"ActivationLockBypassCode":
+		"ActivationLockBypassCode",
+		"ClearActivationLockBypassCode":
 
 	case "InstallProfile":
 		if cmd.InstallProfile == nil {

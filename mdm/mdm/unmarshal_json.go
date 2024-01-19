@@ -53,7 +53,9 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 		"OSUpdateStatus",
 		"EnableRemoteDesktop",
 		"DisableRemoteDesktop",
-		"ActivationLockBypassCode":
+		"ActivationLockBypassCode",
+		"ClearActivationLockBypassCode":
+
 		return nil
 	case "InstallProfile":
 		var payload InstallProfile
