@@ -220,7 +220,7 @@ func (c *Client) newRequest(method, urlStr string, body interface{}) (*http.Requ
 	return req, nil
 }
 
-func (c *Client) newRequest2(method, urlStr string, body interface{}) (*http.Request, error) {
+func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*http.Request, error) {
 	logger := log.NewLogfmtLogger(os.Stderr)
 	rel, err := url.Parse(urlStr)
 	if err != nil {
@@ -228,18 +228,20 @@ func (c *Client) newRequest2(method, urlStr string, body interface{}) (*http.Req
 	}
 
 	u := c.baseURL.ResolveReference(rel)
-	var buf bytes.Buffer
-	if body != nil {
-		if err := json.NewEncoder(&buf).Encode(body); err != nil {
-			return nil, errors.Wrap(err, "encode http body for DEP request")
-		}
+	//var buf bytes.Buffer
+	// 构建一个strings.Reader，用于将字符串数据作为请求体
+	requestBody := strings.NewReader(formEncodedData)
+	if err != nil {
+		return nil, errors.Wrap(err, "encode http body for DEP request")
 	}
+
 	level.Info(logger).Log(
 		"msg", "newRequest2 url",
 		"url", u.String(),
-		"body", &buf,
+		"body", &requestBody,
 	)
-	req, err := http.NewRequest(method, u.String(), &buf)
+
+	req, err := http.NewRequest(method, u.String(), requestBody)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating %s request to dep %s", method, u.String())
 	}
@@ -286,6 +288,7 @@ func (c *Client) do2(req *http.Request, into interface{}) error {
 	level.Info(logger).Log(
 		"msg", "DisableActivationLock do2",
 		"body", resp.Body,
+		"code", resp.StatusCode,
 	)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)

@@ -65,20 +65,19 @@ func (c *Client) DisableActivationLock(dalr *DisableActivationLockRequest) (*Dis
 	values.Add("imei2", url.QueryEscape(dalr.Imei2))
 	values.Add("meid", url.QueryEscape(dalr.Meid))
 	values.Add("productType", url.QueryEscape(dalr.ProductType))
-	//values.Add("orgName", dalr.OrgName)
-	//values.Add("guid", dalr.Guid)
-	//values.Add("escrowKey", dalr.EscrowKey)
-	body := DisableActivationLockRequestBodyInfo{
-		OrgName:   url.QueryEscape(dalr.OrgName),
-		Guid:      url.QueryEscape(dalr.Guid),
-		EscrowKey: url.QueryEscape(dalr.EscrowKey),
-	}
-
 	// 将url.Values编码为字符串形式
 	queryString := values.Encode()
 	var toUri = disableActivationLockPath + "?" + queryString
 
-	req, err := c.newRequest2("POST", toUri, &body)
+	// 创建一个url.Values对象用于构建form数据
+	formData := url.Values{}
+	// 添加你的键值对
+	formData.Add("orgName", url.QueryEscape(dalr.OrgName))
+	formData.Add("guid", url.QueryEscape(dalr.Guid))
+	formData.Add("escrowKey", url.QueryEscape(dalr.EscrowKey))
+	// 将url.Values编码为字符串形式
+	formEncodedData := formData.Encode()
+	req, err := c.newRequest2("POST", toUri, formEncodedData)
 	if err != nil {
 		return nil, errors.Wrap(err, "create activation lock request")
 	}
