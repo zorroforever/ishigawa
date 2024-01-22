@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/micromdm/micromdm/dep"
+	"github.com/micromdm/micromdm/pkg/activationlock"
 	"github.com/micromdm/micromdm/pkg/httputil"
 	"net/http"
 )
@@ -43,11 +44,29 @@ func decodeActivationLockResponse(_ context.Context, r *http.Response) (interfac
 func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(activationLockRequest)
-		resp, err := svc.ActivationLock(ctx, req.ActivationLockRequest)
-		return activationLockResponse{
-			ActivationLockResponse: resp,
-			Err:                    err,
-		}, nil
+		var orgKey = req.ActivationLockRequest.EscrowKey
+		if orgKey != "" {
+			bypassCode, err2 := activationlock.Create([]byte(orgKey))
+			if err2 != nil {
+				return nil, err2
+			}
+			var hashReq = dep.ActivationLockRequest{
+				Device:      req.ActivationLockRequest.Device,
+				LostMessage: req.ActivationLockRequest.LostMessage,
+				EscrowKey:   bypassCode.Hash(),
+			}
+			resp, err := svc.ActivationLock(ctx, &hashReq)
+			return activationLockResponse{
+				ActivationLockResponse: resp,
+				Err:                    err,
+			}, nil
+		} else {
+			resp, err := svc.ActivationLock(ctx, req.ActivationLockRequest)
+			return activationLockResponse{
+				ActivationLockResponse: resp,
+				Err:                    err,
+			}, nil
+		}
 	}
 }
 
