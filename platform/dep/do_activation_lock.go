@@ -2,7 +2,6 @@ package dep
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/log"
@@ -55,8 +54,7 @@ func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 			"escrow key org string", &orgKey,
 		)
 		if orgKey != "" {
-			key, _ := hex.DecodeString(orgKey)
-			bypassCode, err := activationlock.Create(key)
+			bypassCode, err := activationlock.Create(nil)
 			var hashReq = dep.ActivationLockRequest{
 				Device:      req.ActivationLockRequest.Device,
 				LostMessage: req.ActivationLockRequest.LostMessage,

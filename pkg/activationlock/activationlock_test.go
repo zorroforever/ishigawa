@@ -2,6 +2,7 @@ package activationlock
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 )
 
@@ -48,4 +49,13 @@ func TestBypassCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCreate(t *testing.T) {
+	//var inp = "1ea841db5edfafe6075b5ae0d845d254"
+	//key, _ := hex.DecodeString("")
+	code, _ := Create(nil)
+
+	fmt.Println("to apple hash=", code.Hash())
+	fmt.Println("bypass human=", code.String())
 }
