@@ -53,33 +53,25 @@ func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 			"msg", "MakeDoActivationLockEndpoint",
 			"escrow key org string", &orgKey,
 		)
-		if orgKey != "" {
-			bypassCode, err := activationlock.Create(nil)
-			var hashReq = dep.ActivationLockRequest{
-				Device:      req.ActivationLockRequest.Device,
-				LostMessage: req.ActivationLockRequest.LostMessage,
-				EscrowKey:   bypassCode.Hash(),
-			}
-			level.Info(logger).Log(
-				"msg", "MakeDoActivationLockEndpoint",
-				"escrow key hash", (&bypassCode).Hash(),
-			)
-			level.Info(logger).Log(
-				"msg", "MakeDoActivationLockEndpoint",
-				"escrow key string", (&bypassCode).String(),
-			)
-			resp, err := svc.ActivationLock(ctx, &hashReq)
-			return activationLockResponse{
-				ActivationLockResponse: resp,
-				Err:                    err,
-			}, nil
-		} else {
-			resp, err := svc.ActivationLock(ctx, req.ActivationLockRequest)
-			return activationLockResponse{
-				ActivationLockResponse: resp,
-				Err:                    err,
-			}, nil
+		bypassCode, err := activationlock.Create(nil)
+		var hashReq = dep.ActivationLockRequest{
+			Device:      req.ActivationLockRequest.Device,
+			LostMessage: req.ActivationLockRequest.LostMessage,
+			EscrowKey:   bypassCode.Hash(),
 		}
+		level.Info(logger).Log(
+			"msg", "MakeDoActivationLockEndpoint",
+			"escrow key hash", (&bypassCode).Hash(),
+		)
+		level.Info(logger).Log(
+			"msg", "MakeDoActivationLockEndpoint",
+			"escrow key string", (&bypassCode).String(),
+		)
+		resp, err := svc.ActivationLock(ctx, &hashReq)
+		return activationLockResponse{
+			ActivationLockResponse: resp,
+			Err:                    err,
+		}, nil
 	}
 }
 
