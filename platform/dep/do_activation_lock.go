@@ -48,11 +48,6 @@ func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		logger := log.NewLogfmtLogger(os.Stderr)
 		req := request.(activationLockRequest)
-		var orgKey = req.ActivationLockRequest.EscrowKey
-		level.Info(logger).Log(
-			"msg", "MakeDoActivationLockEndpoint",
-			"escrow key org string", &orgKey,
-		)
 		bypassCode, err := activationlock.Create(nil)
 		var hashReq = dep.ActivationLockRequest{
 			Device:      req.ActivationLockRequest.Device,
@@ -68,6 +63,7 @@ func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 			"escrow key string", (&bypassCode).String(),
 		)
 		resp, err := svc.ActivationLock(ctx, &hashReq)
+		resp.EscrowKey = (&bypassCode).String()
 		return activationLockResponse{
 			ActivationLockResponse: resp,
 			Err:                    err,

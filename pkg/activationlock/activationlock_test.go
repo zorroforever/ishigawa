@@ -52,10 +52,14 @@ func TestBypassCode(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	//var inp = "1ea841db5edfafe6075b5ae0d845d254"
-	//key, _ := hex.DecodeString("")
-	code, _ := Create(nil)
+	var inp = "1ea841db5edfafe6075b5ae0d845d254"
+	key, _ := hex.DecodeString(inp)
+	code, _ := Create(key)
 
 	fmt.Println("to apple hash=", code.Hash())
 	fmt.Println("bypass human=", code.String())
+	rc, _ := ReverseFormat("3UM43-PUYVY-QYD1-UVCC-HEHJ-FKA4")
+	reversedOrg := hex.EncodeToString(rc)
+	fmt.Println("Reversed Key:", reversedOrg)
+
 }

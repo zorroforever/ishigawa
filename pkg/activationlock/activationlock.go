@@ -105,3 +105,48 @@ func convertBits(data []byte, frombits, tobits byte) ([]byte, error) {
 
 	return ret, nil
 }
+func ReverseFormat(format string) ([]byte, error) {
+	values := make([]byte, 0, len(format))
+
+	for _, char := range format {
+		if char == '-' {
+			continue
+		}
+		pos := byte(strings.IndexRune(charset, char))
+		if pos == 255 {
+			return nil, fmt.Errorf("格式字符串中存在无效字符: %c", char)
+		}
+		values = append(values, pos)
+	}
+
+	keyBytes, err := convertBits2(values, 5, 8)
+	if err != nil {
+		return nil, err
+	}
+
+	return keyBytes, nil
+}
+func convertBits2(data []byte, frombits, tobits byte) ([]byte, error) {
+	var ret []byte
+	acc := uint32(0)
+	bits := byte(0)
+	maxv := byte(1<<tobits) - 1
+	for idx, value := range data {
+		if value>>frombits != 0 {
+			return nil, fmt.Errorf("invalid data range: data[%d]=%d (frombits=%d)", idx, value, frombits)
+		}
+		acc = acc<<frombits | uint32(value)
+		bits += frombits
+		for bits >= tobits {
+			bits -= tobits
+			ret = append(ret, byte(acc>>bits)&maxv)
+		}
+	}
+	if bits > 0 {
+		for bit := frombits; bit >= bits; bit-- {
+			acc = acc &^ (1 << bit)
+		}
+		ret = append(ret, byte(acc)&maxv)
+	}
+	return ret, nil
+}

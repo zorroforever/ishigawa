@@ -43,6 +43,7 @@ type DisableActivationLockResponse struct {
 type ActivationLockResponse struct {
 	SerialNumber string `json:"serial_number"`
 	Status       string `json:"response_status"`
+	EscrowKey    string `json:"escrow_key"`
 }
 
 func (c *Client) ActivationLock(alr *ActivationLockRequest) (*ActivationLockResponse, error) {
