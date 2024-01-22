@@ -2,12 +2,16 @@ package dep
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/micromdm/micromdm/dep"
 	"github.com/micromdm/micromdm/pkg/activationlock"
 	"github.com/micromdm/micromdm/pkg/httputil"
 	"net/http"
+	"os"
 )
 
 func (svc *DEPService) ActivationLock(ctx context.Context, r *dep.ActivationLockRequest) (*dep.ActivationLockResponse, error) {
@@ -43,18 +47,29 @@ func decodeActivationLockResponse(_ context.Context, r *http.Response) (interfac
 
 func MakeDoActivationLockEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		logger := log.NewLogfmtLogger(os.Stderr)
 		req := request.(activationLockRequest)
 		var orgKey = req.ActivationLockRequest.EscrowKey
+		level.Info(logger).Log(
+			"msg", "MakeDoActivationLockEndpoint",
+			"escrow key org string", &orgKey,
+		)
 		if orgKey != "" {
-			bypassCode, err2 := activationlock.Create([]byte(orgKey))
-			if err2 != nil {
-				return nil, err2
-			}
+			key, _ := hex.DecodeString(orgKey)
+			bypassCode, err := activationlock.Create(key)
 			var hashReq = dep.ActivationLockRequest{
 				Device:      req.ActivationLockRequest.Device,
 				LostMessage: req.ActivationLockRequest.LostMessage,
 				EscrowKey:   bypassCode.Hash(),
 			}
+			level.Info(logger).Log(
+				"msg", "MakeDoActivationLockEndpoint",
+				"escrow key hash", (&bypassCode).Hash(),
+			)
+			level.Info(logger).Log(
+				"msg", "MakeDoActivationLockEndpoint",
+				"escrow key string", (&bypassCode).String(),
+			)
 			resp, err := svc.ActivationLock(ctx, &hashReq)
 			return activationLockResponse{
 				ActivationLockResponse: resp,
