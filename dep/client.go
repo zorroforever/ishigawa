@@ -271,7 +271,7 @@ func (c *Client) do(req *http.Request, into interface{}) error {
 	level.Info(logger).Log(
 		"msg=", "====================== do1",
 		"code=", resp.StatusCode,
-		"header=", resp.Header.Values("X-ADM-Auth-Session"),
+		"X-ADM-Auth-Session=", c.authSessionToken,
 	)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
@@ -295,9 +295,9 @@ func (c *Client) do2(req *http.Request, into interface{}) error {
 	logger := log.NewLogfmtLogger(os.Stderr)
 	bbb, _ := ioutil.ReadAll(resp.Body)
 	level.Info(logger).Log(
-		"msg", "====================== do2",
-		"body", string(bbb),
-		"code", resp.StatusCode,
+		"msg=", "====================== do2",
+		"body=", string(bbb),
+		"code=", resp.StatusCode,
 	)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
