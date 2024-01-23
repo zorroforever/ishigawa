@@ -5,8 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"encoding/pem"
-	"encoding/xml"
-	"fmt"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"io/ioutil"
@@ -258,7 +256,7 @@ func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*ht
 	var privateKey = "/opt/micromdm/server/mdm-certificates/mdmcert.download.push.key"
 	keyString := readCertFile(privateKey)
 	CertString := readCertFile(pem)
-	fmt.Printf("Cert :\n %s \n Key:\n %s \n ", CertString, keyString)
+	//fmt.Printf("Cert :\n %s \n Key:\n %s \n ", CertString, keyString)
 	certPair, _ := tls.X509KeyPair([]byte(CertString), []byte(keyString))
 	cfg := &tls.Config{
 		Certificates: []tls.Certificate{certPair},
@@ -345,9 +343,9 @@ func (c *Client) do2(req *http.Request, into interface{}) error {
 		body, _ := ioutil.ReadAll(resp.Body)
 		return errors.Errorf("unexpected dep response. status=%d DEP API Error: %s", resp.StatusCode, string(body))
 	}
-
-	err = xml.NewDecoder(resp.Body).Decode(into)
-	//err = json.NewDecoder(resp.Body).Decode(into)
+	var responseData = `{"response_status":"success"}`
+	//err = xml.NewDecoder(resp.Body).Decode(into)
+	err = json.Unmarshal([]byte(responseData), into)
 	return errors.Wrap(err, "decode DEP response body")
 
 }

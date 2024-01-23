@@ -38,6 +38,7 @@ type DisableActivationLockRequestBodyInfo struct {
 	EscrowKey string `json:"escrowKey"`
 }
 type DisableActivationLockResponse struct {
+	Status string `json:"response_status"`
 }
 
 type ActivationLockResponse struct {
@@ -85,5 +86,5 @@ func (c *Client) DisableActivationLock(dalr *DisableActivationLockRequest) (*Dis
 
 	var response DisableActivationLockResponse
 	err = c.do2(req, &response)
-	return &response, errors.Wrap(err, "activation lock")
+	return &response, errors.Wrap(err, "disable activation lock")
 }
