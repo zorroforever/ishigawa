@@ -308,7 +308,7 @@ func (c *Client) do(req *http.Request, into interface{}) error {
 	}
 	defer resp.Body.Close()
 	logger := log.NewLogfmtLogger(os.Stderr)
-	level.Info(logger).Log(
+	level.Debug(logger).Log(
 		"msg=", "====================== do1",
 		"code=", resp.StatusCode,
 		"X-ADM-Auth-Session=", c.authSessionToken,
@@ -334,7 +334,7 @@ func (c *Client) do2(req *http.Request, into interface{}) error {
 	defer resp.Body.Close()
 	logger := log.NewLogfmtLogger(os.Stderr)
 	bbb, _ := ioutil.ReadAll(resp.Body)
-	level.Info(logger).Log(
+	level.Debug(logger).Log(
 		"msg=", "====================== do2",
 		"body=", string(bbb),
 		"code=", resp.StatusCode,
