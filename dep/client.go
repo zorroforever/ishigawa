@@ -2,8 +2,11 @@ package dep
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
+	"encoding/pem"
 	"encoding/xml"
+	"fmt"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"io/ioutil"
@@ -225,8 +228,47 @@ func (c *Client) newRequest(method, urlStr string, body interface{}) (*http.Requ
 	return req, nil
 }
 
+func readCertFile(url string) string {
+	b, _ := ioutil.ReadFile(url)
+	pem.Decode(b)
+	var pemBlocks []*pem.Block
+	var v *pem.Block
+	var pkey []byte
+	for {
+		v, b = pem.Decode(b)
+		if v == nil {
+			break
+		}
+		if v.Type == "PRIVATE KEY" {
+			pkey = pem.EncodeToMemory(v)
+			return string(pkey)
+		} else {
+			pemBlocks = append(pemBlocks, v)
+			bytes := pem.EncodeToMemory(pemBlocks[0])
+			return string(bytes)
+		}
+	}
+	return ""
+}
+
 func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*http.Request, error) {
 	logger := log.NewLogfmtLogger(os.Stderr)
+
+	var pem = "/opt/micromdm/server/mdm-certificates/MDM_ McMurtrie Consulting LLC_Certificate.pem"
+	var privateKey = "/opt/micromdm/server/mdm-certificates/mdmcert.download.push.key"
+	keyString := readCertFile(privateKey)
+	CertString := readCertFile(pem)
+	fmt.Printf("Cert :\n %s \n Key:\n %s \n ", CertString, keyString)
+	certPair, _ := tls.X509KeyPair([]byte(CertString), []byte(keyString))
+	cfg := &tls.Config{
+		Certificates: []tls.Certificate{certPair},
+	}
+	tr := &http.Transport{
+		TLSClientConfig: cfg,
+	}
+	client := &http.Client{Transport: tr}
+	c.client = client
+
 	rel, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, errors.Wrapf(err, "parse dep request url %s", urlStr)
@@ -249,10 +291,10 @@ func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*ht
 		return nil, errors.Wrapf(err, "creating %s request to dep %s", method, u.String())
 	}
 
-	req.Header.Add("User-Agent", c.userAgent)
+	//req.Header.Add("User-Agent", c.userAgent)
 	req.Header.Add("Content-Type", mediaType2)
 	//req.Header.Add("Accept", mediaType2)
-	req.Header.Add(XServerProtocolVersionHeader, XServerProtocolVersion)
+	//req.Header.Add(XServerProtocolVersionHeader, XServerProtocolVersion)
 	return req, nil
 }
 
