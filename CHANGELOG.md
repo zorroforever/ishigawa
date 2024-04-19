@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.12.1...main)
 
 - Fix nil panic in inmem queue (#984)
+- Project dependency updates (#976, #981)
 
 ## [v1.12.1](https://github.com/micromdm/micromdm/compare/v1.12.0...v1.12.1) March 14, 2024
 
