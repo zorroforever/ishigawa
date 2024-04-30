@@ -3,7 +3,8 @@ package crypto
 import (
 	"crypto"
 	"crypto/rsa"
-	"crypto/sha1"
+	_ "crypto/sha1"
+	_ "crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -95,7 +96,7 @@ pyQPbp8orlXe+tA8JA==
 `
 
 func mustParsePublicKey(cert string) *rsa.PublicKey {
-	block, _ := pem.Decode([]byte(appleiPhoneDeviceCAPEM))
+	block, _ := pem.Decode([]byte(cert))
 	if block == nil || block.Type != "CERTIFICATE" {
 		panic("appleiPhoneDeviceCAPEM: invalid PEM block")
 	}
@@ -118,12 +119,22 @@ var appleiPhoneDeviceCAPublicKey = mustParsePublicKey(appleiPhoneDeviceCAPEM)
 // VerifyFromAppleDeviceCA verifies a certificate was signed by Apple's iPhone Device CA.
 // Manually verify the certificate since Go has deprecated verifying SHA1WithRSA x509 certificates.
 func VerifyFromAppleDeviceCA(c *x509.Certificate) error {
-	if c.SignatureAlgorithm != x509.SHA1WithRSA {
-		return x509.ErrUnsupportedAlgorithm
+	var hashType crypto.Hash
+
+	switch c.SignatureAlgorithm {
+	case x509.SHA1WithRSA:
+		hashType = crypto.SHA1
+	case x509.SHA256WithRSA:
+		hashType = crypto.SHA256
+	default:
+		return fmt.Errorf("%w: %s", x509.ErrUnsupportedAlgorithm, c.SignatureAlgorithm)
 	}
 
-	hashed := sha1.Sum(c.RawTBSCertificate)
-	if err := rsa.VerifyPKCS1v15(appleiPhoneDeviceCAPublicKey, crypto.SHA1, hashed[:], c.Signature); err != nil {
+	hasher := hashType.New()
+	hasher.Write(c.RawTBSCertificate)
+	hashed := hasher.Sum(nil)
+
+	if err := rsa.VerifyPKCS1v15(appleiPhoneDeviceCAPublicKey, hashType, hashed, c.Signature); err != nil {
 		return err
 	}
 
