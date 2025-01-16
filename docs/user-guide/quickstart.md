@@ -32,7 +32,7 @@ For example, `-api-key` becomes `MICROMDM_API_KEY`.
 
 **NOTE**: In a production environment, secrets should _always_ be set via environment variables and not CLI flags, so they don't remain in your shell history or server monitoring logs.  
 
-This section described how to start the `micromdm` process interactively in a shell, but that won't persist a server restart or exiting your current session. Having the process remain persistent depends on your environment. Since systemd is a common choice, there are [notes](https://github.com/micromdm/micromdm/wiki/Using-MicroMDM-with-systemd) from users on the wiki. 
+This section described how to start the `micromdm` process interactively in a shell, but that won't persist a server restart or exiting your current session. Having the process remain persistent depends on your environment. Since systemd is a common choice, there are [notes](https://github.com/micromdm/micromdm/wiki/Running-MicroMDM-as-a-Service) from users on the wiki. 
 
 # Configure mdmctl
 
@@ -92,7 +92,7 @@ Apple has a separate flow for the MDM vendor than the one for customers. For an 
 1. Download the encrypted CSR from your email.
 1. Decrypt your CSR.
 
-    `mdmctl mdmcert.download decrypt=~/mdm_signed_request.20171122_094910_220.plist.b64.p7`
+    `mdmctl mdmcert.download -decrypt=~/mdm_signed_request.20171122_094910_220.plist.b64.p7`
 1. Sign into [identity.apple.com](identity.apple.com) with your Apple ID. This Apple ID will likely match the domain that you signed up to mdmcert.download with and the domain where you intend to host your MDM server. 
 1. Download your push cert 🎉
 
