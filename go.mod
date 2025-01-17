@@ -9,10 +9,10 @@ require (
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/groob/finalizer v0.0.0-20170707115354-4c2ed49aabda
-	github.com/groob/plist v0.0.0-20220217120414-63fa881b19a5
-	github.com/jessepeterson/cfgprofiles v0.4.0
+	github.com/jessepeterson/cfgprofiles v0.4.1
 	github.com/korylprince/go-macos-pkg v1.4.2
 	github.com/micromdm/go4 v0.0.0-20240215190618-908f27575419
+	github.com/micromdm/plist v0.2.0
 	github.com/micromdm/scep/v2 v2.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/smallstep/pkcs7 v0.1.1

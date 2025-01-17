@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/gorilla/mux"
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 

@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 )
 
 // QueueInMem represents an in-memory command queue

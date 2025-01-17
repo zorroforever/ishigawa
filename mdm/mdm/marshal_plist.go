@@ -3,7 +3,7 @@ package mdm
 import (
 	"fmt"
 
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 )
 

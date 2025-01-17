@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/groob/plist"
 	"github.com/micromdm/micromdm/pkg/httputil"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 )
 

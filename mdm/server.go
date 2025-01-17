@@ -12,8 +12,8 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
-	"github.com/groob/plist"
 	"github.com/micromdm/micromdm/pkg/crypto"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 	"github.com/smallstep/pkcs7"
 )

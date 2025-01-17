@@ -13,8 +13,8 @@ import (
 	"github.com/micromdm/micromdm/platform/pubsub"
 	"github.com/micromdm/scep/v2/challenge"
 
-	"github.com/groob/plist"
 	"github.com/jessepeterson/cfgprofiles"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
