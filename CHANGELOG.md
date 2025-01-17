@@ -1,9 +1,15 @@
 ## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.12.1...main)
 
+Thanks to our contributors: @PichuChen, @NeverBehave, @korylprince
+
+- Switch to [micromdm/plist](https://github.com/micromdm/plist): da16c240360be0d20bdd4084c3cefb057aebf4fe
+- Display better errors for mdmcert failures: 90831d0c4b085ca4ad1ab99ddfc770dcb3aea0ff
+- Detection of buggy Apple DEP sync: #1016
+- Update documentation: #1000, #1024
 - Remove legacy code (#998)
 - Fix verifying SHA-2 signatures on on ABM enrollment (#989)
 - Fix nil panic in inmem queue (#984)
-- Project dependency updates (#976, #981)
+- Project dependency updates: #976, #981, 97a4d5fd953c32a585e38a362bf1eadce73f5c07, #1033, #1038, #1046, #1047, #1048, #1053, da16c240360be0d20bdd4084c3cefb057aebf4fe
 
 ## [v1.12.1](https://github.com/micromdm/micromdm/compare/v1.12.0...v1.12.1) March 14, 2024
 
