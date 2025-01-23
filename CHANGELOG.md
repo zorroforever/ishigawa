@@ -1,4 +1,10 @@
-## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.12.1...main)
+## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.13.0...main)
+
+Thanks to our contributors!
+
+- [Submit a PR!](https://github.com/micromdm/micromdm/pulls)
+
+## [v1.13.0](https://github.com/micromdm/micromdm/compare/v1.12.1...v1.13.0)
 
 Thanks to our contributors: @PichuChen, @NeverBehave, and @korylprince!
 
