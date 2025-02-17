@@ -252,8 +252,8 @@ func readCertFile(url string) string {
 func (c *Client) newRequest2(method, urlStr string, formEncodedData string) (*http.Request, error) {
 	logger := log.NewLogfmtLogger(os.Stderr)
 
-	var pem = "/opt/micromdm/server/mdm-certificates/MDM_ McMurtrie Consulting LLC_Certificate.pem"
-	var privateKey = "/opt/micromdm/server/mdm-certificates/mdmcert.download.push.key"
+	var pem = "/opt/micromdm/server/mdm-certificates/mdm.pem"
+	var privateKey = "/opt/micromdm/server/mdm-certificates/mdm.push.key"
 	keyString := readCertFile(privateKey)
 	CertString := readCertFile(pem)
 	//fmt.Printf("Cert :\n %s \n Key:\n %s \n ", CertString, keyString)
