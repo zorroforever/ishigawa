@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type disownDevicesEndpoint struct{}
+type DisownDevicesEndpoint struct{}
 type DisownDevicesRequest struct {
 	Serial string `json:"serial"`
 }
