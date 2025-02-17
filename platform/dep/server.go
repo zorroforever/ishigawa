@@ -17,6 +17,7 @@ type Endpoints struct {
 	RemoveProfileEndpoint           endpoint.Endpoint
 	DoActivationLockEndpoint        endpoint.Endpoint
 	DoDisableActivationLockEndpoint endpoint.Endpoint
+	DoDisownDevicesEndpoint         endpoint.Endpoint
 }
 
 func MakeServerEndpoints(s Service, outer endpoint.Middleware, others ...endpoint.Middleware) Endpoints {
@@ -29,6 +30,7 @@ func MakeServerEndpoints(s Service, outer endpoint.Middleware, others ...endpoin
 		GetDeviceDetailsEndpoint:        endpoint.Chain(outer, others...)(MakeGetDeviceDetailsEndpoint(s)),
 		DoActivationLockEndpoint:        endpoint.Chain(outer, others...)(MakeDoActivationLockEndpoint(s)),
 		DoDisableActivationLockEndpoint: endpoint.Chain(outer, others...)(MakeDisableActivationLockEndpoint(s)),
+		DoDisownDevicesEndpoint:         endpoint.Chain(outer, others...)(MakeDisownDevicesEndpoint(s)),
 	}
 }
 
@@ -92,6 +94,14 @@ func RegisterHTTPHandlers(r *mux.Router, e Endpoints, options ...httptransport.S
 	r.Methods("POST").Path("/v1/dep/disableactivationlock").Handler(httptransport.NewServer(
 		e.DoDisableActivationLockEndpoint,
 		decodeDisableActivationLockRequest,
+		httputil.EncodeJSONResponse,
+		options...,
+	))
+	// 解绑ABM
+	// https://developer.apple.com/documentation/devicemanagement/disown-devices/
+	r.Methods("POST").Path("/v1/dep/disownDevices").Handler(httptransport.NewServer(
+		e.DoDisownDevicesEndpoint,
+		decodeDisownDevicesRequest,
 		httputil.EncodeJSONResponse,
 		options...,
 	))

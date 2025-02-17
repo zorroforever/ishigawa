@@ -17,6 +17,7 @@ type Service interface {
 	FetchProfile(ctx context.Context, uuid string) (*dep.Profile, error)
 	ActivationLock(ctx context.Context, r *dep.ActivationLockRequest) (*dep.ActivationLockResponse, error)
 	DisableActivationLock(ctx context.Context, r *dep.DisableActivationLockRequest) (*dep.DisableActivationLockResponse, error)
+	DisownDevices(ctx context.Context, r *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error)
 }
 
 type DEPClient interface {
