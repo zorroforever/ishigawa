@@ -8,15 +8,17 @@ import (
 	"github.com/micromdm/micromdm/pkg/httputil"
 	"net/http"
 )
-type disownDevicesEndpoint struct {}
+
+type disownDevicesEndpoint struct{}
 type DisownDevicesRequest struct {
-	Serial      string `json:"serial"`
+	Serial string `json:"serial"`
 }
+
 func (svc *DEPService) DisownDevices(ctx context.Context, r *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error) {
 	if svc.client2 == nil {
 		return nil, errors.New("DEP not configured yet. add a DEP token to enable DEP")
 	}
-	return svc.client2.DisableActivationLock(r)
+	return svc.client2.DisownDevices(r)
 
 }
 
@@ -49,11 +51,10 @@ func MakeDisownDevicesEndpoint(svc Service) endpoint.Endpoint {
 		resp, err := svc.DisownDevices(ctx, req.DisownDevicesRequest)
 		return disownDevicesResponse{
 			DisownDevicesResponse: resp,
-			Err:                           err,
+			Err:                   err,
 		}, nil
 	}
 }
-
 
 func (e Endpoints) DoDisownDevices(ctx context.Context, r *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error) {
 	request := r

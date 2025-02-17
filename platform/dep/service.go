@@ -29,6 +29,7 @@ type DEPClient interface {
 	DeviceDetails(...string) (*dep.DeviceDetailsResponse, error)
 	ActivationLock(*dep.ActivationLockRequest) (*dep.ActivationLockResponse, error)
 	DisableActivationLock(*dep.DisableActivationLockRequest) (*dep.DisableActivationLockResponse, error)
+	DisownDevices(request *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error)
 }
 
 type DEPService struct {
