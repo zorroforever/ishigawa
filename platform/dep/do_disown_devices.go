@@ -56,7 +56,7 @@ func MakeDisownDevicesEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
-func (e Endpoints) DoDisownDevices(ctx context.Context, r *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error) {
+func (e Endpoints) DisownDevices(ctx context.Context, r *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error) {
 	request := r
 	resp, err := e.DoDisownDevicesEndpoint(ctx, request)
 	if err != nil {
