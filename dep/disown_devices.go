@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	disownDevicesPath = "device/disown"
+	disownDevicesPath = "devices/disown"
 )
 
 type DisownDevicesRequest struct {
