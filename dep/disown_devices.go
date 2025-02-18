@@ -9,7 +9,7 @@ const (
 )
 
 type DisownDevicesRequest struct {
-	Device []string `json:"device"`
+	Devices []string `json:"devices"`
 }
 
 type DisownDevicesResponse struct {
