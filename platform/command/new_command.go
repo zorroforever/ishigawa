@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/gorilla/mux"
@@ -12,6 +13,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/micromdm/micromdm/mdm/mdm"
 	"github.com/micromdm/micromdm/pkg/httputil"
 )
@@ -25,6 +28,8 @@ const (
 )
 
 func (svc *CommandService) NewCommand(ctx context.Context, request *mdm.CommandRequest) (*mdm.CommandPayload, error) {
+	logger := log.NewLogfmtLogger(os.Stderr)
+
 	if request == nil {
 		return nil, errors.New("empty CommandRequest")
 	}
@@ -40,6 +45,12 @@ func (svc *CommandService) NewCommand(ctx context.Context, request *mdm.CommandR
 	if err := svc.publisher.Publish(context.TODO(), CommandTopic, msg); err != nil {
 		return nil, errors.Wrapf(err, "publish mdm command on topic: %s", CommandTopic)
 	}
+	level.Info(logger).Log(
+		"msg", "NewCommand req",
+		"context.Context", ctx,
+		"request.udid", request.UDID,
+		"request.Command", payload.Command,
+	)
 	return payload, nil
 }
 

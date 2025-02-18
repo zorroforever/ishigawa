@@ -63,9 +63,15 @@ func (c *Client) DisableActivationLock(dalr *DisableActivationLockRequest) (*Dis
 	// 使用url.Values来拼接URL参数
 	values := url.Values{}
 	values.Add("serial", url.QueryEscape(dalr.Serial))
-	values.Add("imei", url.QueryEscape(dalr.Imei))
-	values.Add("imei2", url.QueryEscape(dalr.Imei2))
-	values.Add("meid", url.QueryEscape(dalr.Meid))
+	if len(dalr.Imei) > 0 {
+		values.Add("imei", url.QueryEscape(dalr.Imei))
+	}
+	if len(dalr.Imei2) > 0 {
+		values.Add("imei2", url.QueryEscape(dalr.Imei2))
+	}
+	if len(dalr.Meid) > 0 {
+		values.Add("meid", url.QueryEscape(dalr.Meid))
+	}
 	values.Add("productType", url.QueryEscape(dalr.ProductType))
 	// 将url.Values编码为字符串形式
 	queryString := values.Encode()
