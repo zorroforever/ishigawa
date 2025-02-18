@@ -15,10 +15,10 @@ type DisownDevicesRequest struct {
 }
 
 func (svc *DEPService) DisownDevices(ctx context.Context, r *dep.DisownDevicesRequest) (*dep.DisownDevicesResponse, error) {
-	if svc.client2 == nil {
+	if svc.client == nil {
 		return nil, errors.New("DEP not configured yet. add a DEP token to enable DEP")
 	}
-	return svc.client2.DisownDevices(r)
+	return svc.client.DisownDevices(r)
 
 }
 
