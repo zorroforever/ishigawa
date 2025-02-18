@@ -312,6 +312,7 @@ func (c *Client) do(req *http.Request, into interface{}) error {
 		"msg=", "====================== do1",
 		"code=", resp.StatusCode,
 		"X-ADM-Auth-Session=", c.authSessionToken,
+		"resp.Body =", resp.Body,
 	)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)

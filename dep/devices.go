@@ -10,6 +10,7 @@ const (
 	fetchDevicesPath  = "server/devices"
 	syncDevicesPath   = "devices/sync"
 	deviceDetailsPath = "devices"
+	disownDevicesPath = "devices/disown"
 )
 
 type Device struct {
@@ -118,4 +119,22 @@ func (c *Client) DeviceDetails(serials ...string) (*DeviceDetailsResponse, error
 	}
 	err = c.do(req, &response)
 	return &response, errors.Wrap(err, "get device details")
+}
+
+type DisownDevicesRequest struct {
+	Devices []string `json:"devices"`
+}
+
+type DisownDevicesResponse struct {
+	Devices string `json:"response_status"`
+}
+
+func (c *Client) DisownDevices(alr *DisownDevicesRequest) (*DisownDevicesResponse, error) {
+	req, err := c.newRequest("POST", disownDevicesPath, &alr)
+	if err != nil {
+		return nil, errors.Wrap(err, "create disown device lock request")
+	}
+	var response DisownDevicesResponse
+	err = c.do(req, &response)
+	return &response, errors.Wrap(err, "disown device")
 }
