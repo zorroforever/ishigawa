@@ -10,7 +10,7 @@ import (
 	"github.com/micromdm/micromdm/pkg/crypto"
 
 	httptransport "github.com/go-kit/kit/transport/http"
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 	"github.com/smallstep/pkcs7"
 )
 

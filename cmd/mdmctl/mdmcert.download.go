@@ -275,12 +275,13 @@ func sendMdmcertDownloadRequest(client *http.Client, req *http.Request) error {
 	}
 	var jsn = struct {
 		Result string
+		Reason string
 	}{}
 	if err := json.NewDecoder(resp.Body).Decode(&jsn); err != nil {
 		return err
 	}
 	if jsn.Result != "success" {
-		return fmt.Errorf("got unexpected result body: %q", jsn.Result)
+		return fmt.Errorf("got unexpected result body: %q (%q)", jsn.Result, jsn.Reason)
 	}
 	return nil
 }

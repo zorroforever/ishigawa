@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 )
 
 /*

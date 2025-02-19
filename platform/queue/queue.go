@@ -9,7 +9,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 
 	"github.com/micromdm/micromdm/mdm"
