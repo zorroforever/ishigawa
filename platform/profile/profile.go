@@ -3,7 +3,7 @@ package profile
 import (
 	"github.com/micromdm/micromdm/platform/profile/internal/profileproto"
 
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 	"github.com/smallstep/pkcs7"
 	"google.golang.org/protobuf/proto"

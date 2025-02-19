@@ -1,17 +1,53 @@
-## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.11.0...main)
+## [Unreleased](https://github.com/micromdm/micromdm/compare/v1.13.0...main)
+
+Thanks to our contributors!
+
+- [Submit a PR!](https://github.com/micromdm/micromdm/pulls)
+
+## [v1.13.0](https://github.com/micromdm/micromdm/compare/v1.12.1...v1.13.0)
+
+Thanks to our contributors: @PichuChen, @NeverBehave, and @korylprince!
+
+- Switch to [micromdm/plist](https://github.com/micromdm/plist): da16c240360be0d20bdd4084c3cefb057aebf4fe, 2f501fb0cb8edb33c44364bceef2f40710ffd9d1
+- Display better errors for mdmcert failures: 90831d0c4b085ca4ad1ab99ddfc770dcb3aea0ff
+- Detection of buggy Apple DEP sync: #1016
+- Update documentation: #1000, #1024
+- Remove legacy code (#998)
+- Fix verifying SHA-2 signatures at ADE enrollment (#989)
+- Fix nil panic in inmem queue (#984)
+- Project dependency updates: #976, #981, 97a4d5fd953c32a585e38a362bf1eadce73f5c07, #1033, #1038, #1046, #1047, #1048, #1053, da16c240360be0d20bdd4084c3cefb057aebf4fe
+
+## [v1.12.1](https://github.com/micromdm/micromdm/compare/v1.12.0...v1.12.1) March 14, 2024
+
+This release includes one fix.
+
+Thanks to our contributors: @iann0036
+
+- Fix error comparison in builtin stores (#975)
+
+Note: this release was made because v1.12.0 was tagged on a commit not on the main branch. Please use this release instead.
+
+## [v1.12.0](https://github.com/micromdm/micromdm/compare/v1.11.0...v1.12.0) February 17, 2024
+
+This release includes new features and fixes.
+
+Thanks to our contributors: @grahamgilbert, @jamesez, @jessepeterson, @korylprince
 
 - Add `-log-time` flag to include timestamps in log messages (#890)
 - Add `-device-signature-skew` flag to allow configuring clock skew when verifying device signatures (#887)
 - Tidy code for Go 1.20 and update Go version for Docker and CI (#902)
 - Add support for inspecting the MDM command queue (#895)
-  - See the [docs](https://github.com/micromdm/micromdm/blob/main/docs/user-guide/api-and-webhooks.md#inspecting-the-command-queue) for how to use
+  - See the [docs](https://github.com/micromdm/micromdm/blob/main/docs/user-guide/api-and-webhooks.md#inspecting-the-command-queue) for how to use!
 - Fix HTTP status codes being swallowed by -http-debug flag (#906)
-- Fix pkg signature checks on non-macOS platforms (#930)
-- Project dependency updates (#888, #889, #900)
+- Remove unused tools package
+- Fix pkg signature checks on non-macOS platforms (#930, #962)
+- Add go:generate for command_queued protobuf
+- Switch to [smallstep/pkcs7](https://github.com/smallstep/pkcs7) for PKCS7 library (#944)
+- Remove PayloadScope=System from enrollment profile (See #766)
+- Allow disabling default HTTP to HTTPS redirect (#967)
+- Project dependency updates (#881, #888, #899, #900, #918, #933, #946, #948, #954, #958, #960, #961, #965, #966)
 
-Thanks to our contributors: @grahamgilbert, @jamesez, @korylprince
-
-## [v1.11.0](https://github.com/micromdm/micromdm/compare/v1.10.1...v1.11.0)
+## [v1.11.0](https://github.com/micromdm/micromdm/compare/v1.10.1...v1.11.0) May 10, 2023
 
 This release includes new features and fixes.
 

@@ -17,7 +17,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/groob/plist"
+	"github.com/micromdm/plist"
 	"github.com/pkg/errors"
 )
 
